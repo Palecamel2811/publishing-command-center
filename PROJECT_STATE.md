@@ -44,5 +44,8 @@ python3 -m pytest tests/
 python3 scripts/populate_sample_data.py
 ```
 
+## Architecture & System Map
+See [ARCHITECTURE_MAP.md](file:///Users/theartisluv/projects/publishing-command-center/ARCHITECTURE_MAP.md) for the complete building blocks map, Mermaid data flow diagrams, and technology stack breakdown.
+
 ## Future Upgrades & Roadmap
 See [FUTURE_ROADMAP.md](file:///Users/theartisluv/projects/publishing-command-center/FUTURE_ROADMAP.md) for the prioritized feature roadmap, architectural enhancements, and low-risk evaluation milestones.
