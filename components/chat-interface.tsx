@@ -141,12 +141,15 @@ export function ChatInterface() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 10V3L4 14h7v7l9-11h-7z" />
                 </svg>
               </div>
-              <div className="glass rounded-2xl px-4 py-3">
+              <div className="glass rounded-2xl px-4 py-3 flex items-center gap-3">
                 <div className="flex gap-1.5">
                   <div className="w-2 h-2 rounded-full bg-cyan-400 animate-bounce" style={{ animationDelay: '0ms' }} />
                   <div className="w-2 h-2 rounded-full bg-cyan-400 animate-bounce" style={{ animationDelay: '150ms' }} />
                   <div className="w-2 h-2 rounded-full bg-cyan-400 animate-bounce" style={{ animationDelay: '300ms' }} />
                 </div>
+                <span className="text-xs text-cyan-300/80 font-mono animate-pulse">
+                  Searching vector store & synthesizing answer...
+                </span>
               </div>
             </motion.div>
           )}
