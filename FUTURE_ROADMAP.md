@@ -4,7 +4,7 @@ This document outlines prioritized, high-ROI future upgrades for the Publishing 
 
 ---
 
-## 🎯 Phase 1: High-ROI / Low-Risk Enhancements (Immediate Next Steps)
+## 🎯 Phase 1: High-ROI / Low-Risk Enhancements (Completed / Immediate Next Steps)
 
 These upgrades add significant value to system observability and precision without introducing fragile dependencies or breaking existing pipelines.
 
@@ -22,16 +22,21 @@ These upgrades add significant value to system observability and precision witho
 
 ---
 
-## 🚀 Phase 2: Domain & Analytical Upgrades (Medium Term)
+## 🚀 Phase 2: Domain, Memory & Analytical Upgrades (Medium Term)
 
 Features that expand business capabilities for music publishing and multi-industry domain adaptations.
 
-### 1. Audit & Reconciliation Engine
+### 1. Multi-Turn Conversational Memory & Query Reformulation
+- **Regex Fast-Pass Pronoun Resolution**: Detect ambiguous pronouns (*"it"*, *"that song"*, *"those splits"*) and use a fast query condenser to reformulate follow-up questions into standalone vector search queries without hallucination risk.
+- **Rolling 2-Turn Context Buffer**: Maintain a lean 2-turn memory window to preserve chat context while protecting local model VRAM and API context windows.
+- **Entity Reset Safeguards**: Automatically clear previous song/contract context whenever a user explicitly introduces a new song title or rightsholder name.
+
+### 2. Audit & Reconciliation Engine
 - **Automated Discrepancy Alerting**: Push notifications / UI badge warnings when calculated royalty rates deviate from contract terms by > 5%.
 - **PRO Split Registration Checker**: Cross-reference internal split sheets against ASCAP / BMI public database APIs to flag unregistered works or missing rightsholder shares.
 - **Multi-Currency Conversion Engine**: Real-time currency exchange rates for international territory earnings (GBP, EUR, JPY to USD).
 
-### 2. UI & User Experience
+### 3. UI & User Experience
 - **In-App Interactive Split Sheet Builder**: Visual drag-and-drop rightsholder pie chart editor for creating and exporting signed PDF split sheets.
 - **Batch Export PDF Reports**: Generate executive summary PDF reports for audit findings, complete with branded charts and discrepancy tables.
 - **Saved Custom Date & Period Views**: Allow users to save custom date range presets (e.g. "2024 Audit Period", "Q3 2024").
