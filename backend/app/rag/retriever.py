@@ -129,13 +129,8 @@ Respond in JSON only: {"intent": "<intent>", "entities": {"<key>": "<value>"}, "
         if query_key in self.classifier_cache:
             return self.classifier_cache[query_key]
 
-        # Try rule-based classification
+        # Fast rule-based classification (avoids 2s extra blocking LLM call)
         result = self._classify_rules(query)
-        
-        # If low confidence, use LLM
-        if result.confidence < 0.6 and self.llm_client:
-            result = self._classify_llm(query)
-
         result.original_query = query
         self.classifier_cache[query_key] = result
         return result
@@ -440,8 +435,8 @@ Keep answers concise but comprehensive for power users who understand the indust
                         ),
                     },
                 ],
-                temperature=0.1,
-                max_tokens=1500,
+                temperature=0.0,
+                max_tokens=600,
             )
             
             raw_content = response.choices[0].message.content
