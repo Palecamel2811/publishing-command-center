@@ -405,6 +405,129 @@ Keep answers concise but comprehensive for power users who understand the indust
             "follow_up_suggestions": self._suggest_followups(query, understanding),
         }
 
+    def stream_query(
+        self,
+        query: str,
+        filters: Optional[dict[str, Any]] = None,
+        top_k: Optional[int] = None,
+        score_threshold: Optional[float] = None,
+    ):
+        """
+        Stream RAG query results as Server-Sent Events (SSE).
+        
+        Yields:
+        - event: sources -> metadata JSON of citations (sent in <200ms)
+        - event: token -> text token chunks streamed live
+        - event: done -> confidence score and final status
+        """
+        import time
+        start_time = time.time()
+        understanding = self.router.classify(query)
+        merge_filters = {**(filters or {}), **understanding.filters}
+        query_embedding = self.embedder.embed_text(query)
+        
+        effective_top_k = top_k if top_k is not None else self.top_k
+        effective_threshold = score_threshold if score_threshold is not None else self.score_threshold
+        
+        if self.use_hybrid:
+            hybrid_results = self.hybrid_searcher.hybrid_search(
+                query_embedding=query_embedding,
+                query_text=query,
+                filter_conditions=merge_filters,
+                top_k=effective_top_k,
+                score_threshold=effective_threshold,
+            )
+            results = [
+                SearchResult(
+                    document=SearchDocument(
+                        id=hr.doc_id,
+                        content=hr.content,
+                        metadata=hr.metadata,
+                    ),
+                    score=hr.combined_score,
+                    rank=hr.rank,
+                )
+                for hr in hybrid_results
+            ]
+        else:
+            results = self.store.search(
+                query_embedding=query_embedding,
+                query_text=query,
+                filter_conditions=merge_filters,
+                top_k=effective_top_k,
+                score_threshold=effective_threshold,
+            )
+
+        context_parts = []
+        sources = []
+        for sr in results:
+            context_parts.append(
+                f"[Source: {sr.document.metadata.get('source_filename', 'Unknown')}]"
+                f" ({sr.document.metadata.get('doc_type', 'document')}): {sr.document.content}"
+            )
+            sources.append({
+                "id": sr.document.id,
+                "filename": sr.document.metadata.get("source_filename", "Unknown"),
+                "doc_type": sr.document.metadata.get("doc_type", "unknown"),
+                "content": sr.document.content[:500],
+                "score": sr.score,
+                "rank": sr.rank,
+                "metadata": sr.document.metadata,
+            })
+        
+        context = "\n\n".join(context_parts)
+        confidence = round(self._compute_confidence(results, query, understanding), 4)
+
+        # Send source citation metadata FIRST (<200ms)
+        yield f"event: sources\ndata: {json.dumps(sources)}\n\n"
+
+        if not context:
+            no_info_msg = (
+                "I couldn't find relevant information in your publishing data to answer "
+                "that question. Try uploading relevant documents (split sheets, royalty "
+                "statements, contracts) or rephrase your question."
+            )
+            yield f"event: token\ndata: {json.dumps({'token': no_info_msg})}\n\n"
+            yield f"event: done\ndata: {json.dumps({'confidence': 0.0})}\n\n"
+            return
+
+        if not self.llm_client:
+            fallback_text = self._fallback_response(query, context)
+            yield f"event: token\ndata: {json.dumps({'token': fallback_text})}\n\n"
+            yield f"event: done\ndata: {json.dumps({'confidence': confidence})}\n\n"
+            return
+
+        try:
+            # Stream LLM tokens live from OpenAI / Azure OpenAI
+            stream_resp = self.llm_client.chat.completions.create(
+                model=self.llm_model,
+                messages=[
+                    {"role": "system", "content": self.RESPONSE_SYSTEM_PROMPT},
+                    {
+                        "role": "user",
+                        "content": (
+                            f"Context from publishing documents:\n\n{context}\n\n"
+                            f"Question: {query}"
+                        ),
+                    },
+                ],
+                temperature=0.0,
+                max_tokens=600,
+                stream=True,
+            )
+            for chunk in stream_resp:
+                if chunk.choices and len(chunk.choices) > 0 and chunk.choices[0].delta and chunk.choices[0].delta.content:
+                    token = chunk.choices[0].delta.content
+                    yield f"event: token\ndata: {json.dumps({'token': token})}\n\n"
+            
+            yield f"event: done\ndata: {json.dumps({'confidence': confidence})}\n\n"
+
+        except Exception as e:
+            logger.error(f"Streaming LLM failed: {e}")
+            fallback_text = self._fallback_response(query, context)
+            yield f"event: token\ndata: {json.dumps({'token': fallback_text})}\n\n"
+            yield f"event: done\ndata: {json.dumps({'confidence': confidence, 'error': str(e)})}\n\n"
+
     def _generate_response(
         self, query: str, context: str, sources: list[dict]
     ) -> str:

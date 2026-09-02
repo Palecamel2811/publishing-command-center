@@ -2,7 +2,7 @@
 
 import { useState, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { queryRAG } from '@/lib/api';
+import { queryRAG, queryRAGStream } from '@/lib/api';
 import { DocumentViewerModal } from '@/components/document-viewer-modal';
 
 interface Message {
@@ -63,35 +63,71 @@ export function ChatInterface() {
       timestamp: new Date().toISOString(),
     };
 
-    setMessages(prev => [...prev, userMessage]);
+    const assistantId = (Date.now() + 1).toString();
+    const initialAssistantMessage: Message = {
+      id: assistantId,
+      role: 'assistant',
+      content: '',
+      timestamp: new Date().toISOString(),
+      sources: [],
+    };
+
+    setMessages(prev => [...prev, userMessage, initialAssistantMessage]);
     setInput('');
     setIsTyping(true);
 
-    try {
-      // Try real RAG API, fall back to mock if unavailable
-      const response = await getFallbackResponse(userMessage.content);
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: response.content,
-        timestamp: new Date().toISOString(),
-        sources: response.sources,
-      };
-      setMessages(prev => [...prev, assistantMessage]);
-    } catch {
-      // Ultimate fallback
-      const fallback = generateMockResponse(userMessage.content);
-      const assistantMessage: Message = {
-        id: (Date.now() + 1).toString(),
-        role: 'assistant',
-        content: fallback.content,
-        timestamp: new Date().toISOString(),
-        sources: fallback.sources,
-      };
-      setMessages(prev => [...prev, assistantMessage]);
-    } finally {
-      setIsTyping(false);
-    }
+    let streamSuccess = false;
+
+    await queryRAGStream(
+      userMessage.content,
+      {
+        onSources: (sources) => {
+          streamSuccess = true;
+          setMessages(prev =>
+            prev.map(msg =>
+              msg.id === assistantId ? { ...msg, sources } : msg
+            )
+          );
+        },
+        onToken: (token) => {
+          streamSuccess = true;
+          setMessages(prev =>
+            prev.map(msg =>
+              msg.id === assistantId ? { ...msg, content: msg.content + token } : msg
+            )
+          );
+        },
+        onDone: () => {
+          streamSuccess = true;
+          setIsTyping(false);
+        },
+        onError: async () => {
+          if (!streamSuccess) {
+            // Fallback to standard non-streaming queryRAG if SSE streaming fails
+            try {
+              const res = await queryRAG(userMessage.content);
+              setMessages(prev =>
+                prev.map(msg =>
+                  msg.id === assistantId
+                    ? { ...msg, content: res.response, sources: res.sources }
+                    : msg
+                )
+              );
+            } catch {
+              const fallback = generateMockResponse(userMessage.content);
+              setMessages(prev =>
+                prev.map(msg =>
+                  msg.id === assistantId
+                    ? { ...msg, content: fallback.content, sources: fallback.sources }
+                    : msg
+                )
+              );
+            }
+          }
+          setIsTyping(false);
+        },
+      }
+    );
   };
 
   return (

@@ -126,6 +126,86 @@ export async function queryRAG(query: string, options?: {
   });
 }
 
+export async function queryRAGStream(
+  query: string,
+  callbacks: {
+    onSources?: (sources: any[]) => void;
+    onToken?: (token: string) => void;
+    onDone?: (confidence: number) => void;
+    onError?: (err: any) => void;
+  },
+  options?: {
+    filters?: Record<string, any>;
+    top_k?: number;
+    score_threshold?: number;
+  }
+) {
+  try {
+    const cleanEndpoint = '/api/query/stream';
+    const url = `${API_BASE}${cleanEndpoint}`;
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        query,
+        filters: options?.filters,
+        top_k: options?.top_k,
+        score_threshold: options?.score_threshold,
+      }),
+    });
+
+    if (!response.ok || !response.body) {
+      throw new Error(`HTTP Error ${response.status}`);
+    }
+
+    const reader = response.body.getReader();
+    const decoder = new TextDecoder();
+    let buffer = '';
+
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      buffer += decoder.decode(value, { stream: true });
+
+      const events = buffer.split('\n\n');
+      buffer = events.pop() || '';
+
+      for (const rawEvent of events) {
+        if (!rawEvent.trim()) continue;
+        const lines = rawEvent.split('\n');
+        let eventName = '';
+        let dataStr = '';
+
+        for (const line of lines) {
+          if (line.startsWith('event: ')) {
+            eventName = line.slice(7).trim();
+          } else if (line.startsWith('data: ')) {
+            dataStr = line.slice(6).trim();
+          }
+        }
+
+        if (eventName === 'sources' && dataStr) {
+          try { callbacks.onSources?.(JSON.parse(dataStr)); } catch {}
+        } else if (eventName === 'token' && dataStr) {
+          try {
+            const parsed = JSON.parse(dataStr);
+            if (parsed.token) callbacks.onToken?.(parsed.token);
+          } catch {}
+        } else if (eventName === 'done' && dataStr) {
+          try {
+            const parsed = JSON.parse(dataStr);
+            callbacks.onDone?.(parsed.confidence || 0);
+          } catch {}
+        }
+      }
+    }
+  } catch (err) {
+    callbacks.onError?.(err);
+  }
+}
+
 // ── Reconciliation ──────────────────────────────────────────────────────────
 
 export async function runReconciliation(data: {

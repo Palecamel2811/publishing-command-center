@@ -17,7 +17,7 @@ from pathlib import Path
 from typing import Any, Optional
 
 from fastapi import FastAPI, HTTPException, UploadFile, File, Form, Response
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.middleware.cors import CORSMiddleware
 from openai import OpenAI
 
@@ -893,6 +893,33 @@ async def rag_query(query: RAGQuery):
         return result
     except Exception as e:
         logger.error(f"Query failed: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/api/query/stream")
+async def rag_query_stream(query: RAGQuery):
+    """
+    Stream RAG query response in real-time as Server-Sent Events (SSE).
+    Provides <200ms time-to-first-token.
+    """
+    try:
+        retriever = _get_rag_retriever()
+        return StreamingResponse(
+            retriever.stream_query(
+                query=query.query,
+                filters=query.filters,
+                top_k=query.top_k,
+                score_threshold=query.score_threshold,
+            ),
+            media_type="text/event-stream",
+            headers={
+                "Cache-Control": "no-cache",
+                "Connection": "keep-alive",
+                "X-Accel-Buffering": "no",
+            },
+        )
+    except Exception as e:
+        logger.error(f"Streaming query failed: {e}")
         raise HTTPException(status_code=500, detail=str(e))
 
 
