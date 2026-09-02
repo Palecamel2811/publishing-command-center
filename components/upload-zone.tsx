@@ -74,23 +74,57 @@ export function UploadZone({ onUploadComplete }: UploadZoneProps) {
   }, []);
 
   const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
+    if (e.target.files && e.target.files.length > 0) {
       const selectedFiles = Array.from(e.target.files);
-      addFiles(selectedFiles);
+      addAndUploadFiles(selectedFiles);
     }
   };
 
-  const addFiles = (newFiles: File[]) => {
+  const addAndUploadFiles = async (newFiles: File[]) => {
     const uploadFilesList: UploadFile[] = newFiles.map(file => {
-      const isTooLarge = file.size > 10 * 1024 * 1024;
+      const isTooLarge = file.size > 15 * 1024 * 1024;
       return {
         file,
         status: isTooLarge ? 'error' : 'idle',
-        error: isTooLarge ? 'File exceeds 10MB cloud limit' : undefined,
+        error: isTooLarge ? 'File exceeds 15MB cloud limit' : undefined,
       };
     });
     
     setFiles(prev => [...prev, ...uploadFilesList]);
+
+    const validFiles = uploadFilesList.filter(f => f.status === 'idle').map(f => f.file);
+    if (validFiles.length === 0) return;
+
+    setIsUploading(true);
+    try {
+      let result: any = null;
+      try {
+        result = await uploadFiles(validFiles, 'split_sheet');
+      } catch (batchErr) {
+        const singleResults = [];
+        for (const file of validFiles) {
+          const res = await uploadFile(file, 'split_sheet');
+          singleResults.push({ result: res?.result, chunks: res?.result?.chunks_created || 1 });
+        }
+        result = { results: singleResults };
+      }
+      
+      setFiles(prev => prev.map((f) => {
+        if (validFiles.includes(f.file)) {
+          return { ...f, status: 'success' };
+        }
+        return f;
+      }));
+
+      fetchHistory();
+      onUploadComplete?.(result);
+    } catch (error: any) {
+      setFiles(prev => prev.map(f => 
+        validFiles.includes(f.file) ? { ...f, status: 'error', error: error.message || 'Upload failed' } : f
+      ));
+    } finally {
+      setIsUploading(false);
+    }
   };
 
   const handleUpload = async () => {
@@ -196,7 +230,7 @@ export function UploadZone({ onUploadComplete }: UploadZoneProps) {
           ref={fileInputRef}
           type="file"
           multiple
-          accept=".pdf,.txt,.csv,.docx,.xlsx"
+          accept=".pdf,.txt,.csv,.docx,.xlsx,application/pdf,text/plain,text/csv,application/vnd.openxmlformats-officedocument.wordprocessingml.document,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
           onChange={handleFileSelect}
           className="hidden"
         />
