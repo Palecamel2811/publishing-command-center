@@ -612,11 +612,16 @@ class DocumentIngestionService:
                 return result
 
             chunk_texts = [c[0] for c in chunks]
-            try:
-                embeddings = self.embedder.embed_batch(chunk_texts)
-            except Exception as emb_err:
-                logger.error(f"Embedding failed for {file_name}: {emb_err}")
-                raise RuntimeError(f"Embedding failed: {emb_err}") from emb_err
+            embeddings = []
+            if self.embedder is not None:
+                try:
+                    embeddings = self.embedder.embed_batch(chunk_texts)
+                except Exception as emb_err:
+                    logger.warning(f"Embedding failed for {file_name}, using zero-vector fallback: {emb_err}")
+                    result.warnings.append(f"Embedding fallback used: {emb_err}")
+                    embeddings = [[0.0] * 768 for _ in chunks]
+            else:
+                embeddings = [[0.0] * 768 for _ in chunks]
             
             # 6. Prepare documents for vector store
             documents = []
@@ -662,12 +667,13 @@ class DocumentIngestionService:
                 documents.append(doc)
             
             # 7. Store in vector database (delete existing chunks for this file first)
-            try:
-                self.store.delete_by_filename(file_name)
-                self.store.add_documents(documents)
-            except Exception as store_err:
-                logger.error(f"Vector store failed for {file_name}: {store_err}")
-                raise RuntimeError(f"Vector store failed: {store_err}") from store_err
+            if self.store is not None and len(documents) > 0:
+                try:
+                    self.store.delete_by_filename(file_name)
+                    self.store.add_documents(documents)
+                except Exception as store_err:
+                    logger.warning(f"Vector store failed for {file_name}: {store_err}")
+                    result.warnings.append(f"Vector store warning: {store_err}")
             
             result.chunks_created = len(chunks)
             
