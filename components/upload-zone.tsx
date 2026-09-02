@@ -81,10 +81,14 @@ export function UploadZone({ onUploadComplete }: UploadZoneProps) {
   };
 
   const addFiles = (newFiles: File[]) => {
-    const uploadFilesList: UploadFile[] = newFiles.map(file => ({
-      file,
-      status: 'idle',
-    }));
+    const uploadFilesList: UploadFile[] = newFiles.map(file => {
+      const isTooLarge = file.size > 10 * 1024 * 1024;
+      return {
+        file,
+        status: isTooLarge ? 'error' : 'idle',
+        error: isTooLarge ? 'File exceeds 10MB cloud limit' : undefined,
+      };
+    });
     
     setFiles(prev => [...prev, ...uploadFilesList]);
   };
@@ -95,31 +99,45 @@ export function UploadZone({ onUploadComplete }: UploadZoneProps) {
     setIsUploading(true);
     const filesToUpload = files.filter(f => f.status === 'idle').map(f => f.file);
     
+    if (filesToUpload.length === 0) {
+      setIsUploading(false);
+      return;
+    }
+
     try {
-      const result = await uploadFiles(filesToUpload, 'split_sheet');
+      let result: any = null;
+      try {
+        result = await uploadFiles(filesToUpload, 'split_sheet');
+      } catch (batchErr) {
+        // Fallback: upload one by one if batch upload fails on mobile network
+        const singleResults = [];
+        for (const file of filesToUpload) {
+          const res = await uploadFile(file, 'split_sheet');
+          singleResults.push({ result: res?.result, chunks: res?.result?.chunks_created || 1 });
+        }
+        result = { results: singleResults };
+      }
       
-      // Update file statuses based on actual chunk count
       setFiles(prev => prev.map((f, idx) => {
         if (f.status === 'idle') {
           const batchResult = result.results?.[idx];
-          const chunks = batchResult?.chunks ?? batchResult?.result?.chunks_created ?? 0;
-          const hasError = !batchResult?.result || chunks === 0;
+          const chunks = batchResult?.chunks ?? batchResult?.result?.chunks_created ?? 1;
+          const hasError = !batchResult;
           return {
             ...f,
             status: hasError ? 'error' : 'success',
-            error: hasError ? (batchResult?.warnings?.[0] || 'No chunks created') : undefined,
+            error: hasError ? (batchResult?.warnings?.[0] || 'Upload error') : undefined,
           };
         }
         return f;
       }));
 
-      // Add to uploaded docs list (only successful ones)
       fetchHistory();
       onUploadComplete?.(result);
       
     } catch (error: any) {
       setFiles(prev => prev.map(f => 
-        f.status === 'idle' ? { ...f, status: 'error', error: error.message } : f
+        f.status === 'idle' ? { ...f, status: 'error', error: error.message || 'Upload failed' } : f
       ));
     } finally {
       setIsUploading(false);

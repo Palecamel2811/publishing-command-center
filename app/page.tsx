@@ -50,7 +50,7 @@ export default function Home() {
   };
 
   return (
-    <div className="flex h-screen overflow-hidden bg-[#0a0e1a]">
+    <div className="flex h-[100dvh] max-w-full overflow-x-hidden bg-[#0a0e1a]">
       {/* Keyboard shortcuts handler */}
       <KeyboardHandler onKey={handleKeyDown} />
 
@@ -63,7 +63,7 @@ export default function Home() {
       />
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col overflow-hidden">
+      <main className="flex-1 flex flex-col max-w-full overflow-x-hidden overflow-y-auto">
         {/* Top Bar */}
         <header className="flex items-center justify-between h-14 px-4 border-b border-white/10 bg-black/20 backdrop-blur-xl flex-shrink-0">
           <div className="flex items-center gap-3">
@@ -93,7 +93,7 @@ export default function Home() {
         </header>
 
         {/* Page Content */}
-        <div className="flex-1 overflow-auto p-4 pb-16 md:pb-4">
+        <div className="flex-1 overflow-y-auto overflow-x-hidden p-3 md:p-4 pb-20 md:pb-4">
           {activePage === 'dashboard' && (
             <Dashboard 
               data={dashboardData} 
