@@ -93,7 +93,7 @@ export default function Home() {
         </header>
 
         {/* Page Content */}
-        <div className="flex-1 overflow-auto p-4">
+        <div className="flex-1 overflow-auto p-4 pb-16 md:pb-4">
           {activePage === 'dashboard' && (
             <Dashboard 
               data={dashboardData} 
