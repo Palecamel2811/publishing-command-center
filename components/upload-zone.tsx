@@ -110,7 +110,17 @@ export function UploadZone({ onUploadComplete }: UploadZoneProps) {
       }
       
       setFiles(prev => prev.map((f) => {
-        if (validFiles.includes(f.file)) {
+        const fileIdx = validFiles.indexOf(f.file);
+        if (fileIdx !== -1 && result?.results?.[fileIdx]) {
+          const itemRes = result.results[fileIdx];
+          const hasError = itemRes.error || (itemRes.warnings && itemRes.warnings.length > 0 && (!itemRes.result || itemRes.chunks === 0));
+          const errorMsg = itemRes.error || itemRes.warnings?.[0] || itemRes.result?.warnings?.[0] || 'Could not parse document text';
+          return {
+            ...f,
+            status: hasError ? 'error' : 'success',
+            error: hasError ? errorMsg : undefined,
+          };
+        } else if (fileIdx !== -1) {
           return { ...f, status: 'success' };
         }
         return f;
