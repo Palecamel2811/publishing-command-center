@@ -1,0 +1,32 @@
+════════════════════════════════════════════════════════════════
+  Spotify Royalty Statement
+  Work: Midnight Echoes
+  ISRC: USRC17607839
+  Period: Q1 2024
+  Generated: 2025-01-15
+════════════════════════════════════════════════════════════════
+
+STREAMING SUMMARY
+────────────────────────────────────────────────────────────────
+  Total Streams:       12,500,000
+  Mechanical Revenue:  $40,000.00
+  Performance Revenue: $3,000.00
+  ─────────────────────────────────────────
+  Gross Revenue:       $43,000.00
+  Distributor Fees:    $6,450.00 (15%)
+  ─────────────────────────────────────────
+  NET PAYMENT:         $36,550.00
+
+PAYMENT DETAILS
+────────────────────────────────────────────────────────────────
+  Payment Method:      Bank Transfer
+  Payment Date:        January 15, 2025
+  Reference:           SPOTIFY_MidnightEchoes_Q12024
+  Currency:            USD
+
+SPLIT DISTRIBUTION
+────────────────────────────────────────────────────────────────
+  You.....................................  50.0%  $   18,275.00
+  Alex Rivers.............................  25.0%  $    9,137.50
+  Sunset Publishing.......................  15.0%  $    5,482.50
+  Producer Jay............................  10.0%  $    3,655.00

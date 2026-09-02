@@ -1,0 +1,30 @@
+════════════════════════════════════════════════════════════════
+  Youtube Royalty Statement
+  Work: Golden Hour
+  ISRC: USRC17607840
+  Period: Q4 2024
+  Generated: 2025-01-18
+════════════════════════════════════════════════════════════════
+
+STREAMING SUMMARY
+────────────────────────────────────────────────────────────────
+  Total Streams:       2,728,000
+  Mechanical Revenue:  $4,092.00
+  Performance Revenue: $409.20
+  ─────────────────────────────────────────
+  Gross Revenue:       $4,501.20
+  Distributor Fees:    $675.18 (15%)
+  ─────────────────────────────────────────
+  NET PAYMENT:         $3,826.02
+
+PAYMENT DETAILS
+────────────────────────────────────────────────────────────────
+  Payment Method:      Bank Transfer
+  Payment Date:        January 15, 2025
+  Reference:           YOUTUBE_GoldenHour_Q42024
+  Currency:            USD
+
+SPLIT DISTRIBUTION
+────────────────────────────────────────────────────────────────
+  Jordan Lee..............................  60.0%  $    2,295.61
+  You.....................................  40.0%  $    1,530.41

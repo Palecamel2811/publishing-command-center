@@ -1,0 +1,31 @@
+════════════════════════════════════════════════════════════════
+  Youtube Royalty Statement
+  Work: Summer Vibe
+  ISRC: USRC17607842
+  Period: Q4 2024
+  Generated: 2025-01-18
+════════════════════════════════════════════════════════════════
+
+STREAMING SUMMARY
+────────────────────────────────────────────────────────────────
+  Total Streams:       3,472,000
+  Mechanical Revenue:  $5,208.00
+  Performance Revenue: $520.80
+  ─────────────────────────────────────────
+  Gross Revenue:       $5,728.80
+  Distributor Fees:    $859.32 (15%)
+  ─────────────────────────────────────────
+  NET PAYMENT:         $4,869.48
+
+PAYMENT DETAILS
+────────────────────────────────────────────────────────────────
+  Payment Method:      Bank Transfer
+  Payment Date:        January 15, 2025
+  Reference:           YOUTUBE_SummerVibe_Q42024
+  Currency:            USD
+
+SPLIT DISTRIBUTION
+────────────────────────────────────────────────────────────────
+  Tropical Sun............................  40.0%  $    1,947.79
+  You.....................................  30.0%  $    1,460.84
+  Indie Records...........................  30.0%  $    1,460.84

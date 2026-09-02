@@ -1,0 +1,31 @@
+════════════════════════════════════════════════════════════════
+  Spotify Royalty Statement
+  Work: Summer Vibe
+  ISRC: USRC17607842
+  Period: Q3 2024
+  Generated: 2025-01-17
+════════════════════════════════════════════════════════════════
+
+STREAMING SUMMARY
+────────────────────────────────────────────────────────────────
+  Total Streams:       8,351,999
+  Mechanical Revenue:  $26,726.40
+  Performance Revenue: $2,004.48
+  ─────────────────────────────────────────
+  Gross Revenue:       $28,730.88
+  Distributor Fees:    $4,309.63 (15%)
+  ─────────────────────────────────────────
+  NET PAYMENT:         $24,421.25
+
+PAYMENT DETAILS
+────────────────────────────────────────────────────────────────
+  Payment Method:      Bank Transfer
+  Payment Date:        January 15, 2025
+  Reference:           SPOTIFY_SummerVibe_Q32024
+  Currency:            USD
+
+SPLIT DISTRIBUTION
+────────────────────────────────────────────────────────────────
+  Tropical Sun............................  40.0%  $    9,768.50
+  You.....................................  30.0%  $    7,326.37
+  Indie Records...........................  30.0%  $    7,326.37

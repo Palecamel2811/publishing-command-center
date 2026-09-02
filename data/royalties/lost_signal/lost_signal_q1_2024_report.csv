@@ -1,0 +1,13 @@
+Date,Platform,Type,Streams,Gross Revenue,Fees,Net Revenue,Currency
+2024-01-30,spotify,mechanical,2460000,"13,120.00","1,269.36","11,152.00",USD
+2024-01-30,spotify,performance,1640000,984.00,846.24,836.40,USD
+2024-01-30,apple_music,mechanical,1140000,"13,300.00","1,258.56","11,305.00",USD
+2024-01-30,apple_music,performance,760000,684.00,839.04,581.40,USD
+2024-01-30,youtube,mechanical,660000,"1,650.00",163.35,"1,402.50",USD
+2024-01-30,youtube,performance,440000,165.00,108.90,140.25,USD
+2024-01-30,tiktok,mechanical,1680000,"2,240.00",224.28,"1,904.00",USD
+2024-01-30,tiktok,performance,1120000,252.00,149.52,214.20,USD
+2024-01-30,amazon_music,mechanical,372000,"2,790.00",261.14,"2,371.50",USD
+2024-01-30,amazon_music,performance,248000,111.60,174.10,94.86,USD
+2024-01-30,deezer,mechanical,150000,"1,000.00",92.70,850.00,USD
+2024-01-30,deezer,performance,100000,30.00,61.80,25.50,USD

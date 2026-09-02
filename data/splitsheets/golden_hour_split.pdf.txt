@@ -1,0 +1,22 @@
+DOCUMENT: Split Sheet - Golden Hour
+DATE: 2024-05-15
+WORK: Golden Hour
+ISRC: USRC17607840
+ISWC: T-901.234.568-1
+
+PARTIES AND PUBLISHING SHARES:
+────────────────────────────────────────────────────────
+| Party Name                | Share  | Role                    |
+|---------------------------|--------|-------------------------|
+| Jordan Lee                |  60.0% | Writer                  |
+| You                       |  40.0% | Co-Writer / Publisher   |
+────────────────────────────────────────────────────────
+Total Share: 100.0%
+
+PRO REGISTRATIONS:
+  • Jordan Lee: BMI
+  • You: BMI
+
+This split sheet represents the agreed publishing split
+for the above-referenced work. All parties have consented
+to the distribution of publishing income accordingly.

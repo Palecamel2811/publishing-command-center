@@ -1,0 +1,22 @@
+DOCUMENT: Split Sheet - Lost Signal
+DATE: 2024-09-15
+WORK: Lost Signal
+ISRC: USRC17607843
+ISWC: T-901.234.571-7
+
+PARTIES AND PUBLISHING SHARES:
+────────────────────────────────────────────────────────
+| Party Name                | Share  | Role                    |
+|---------------------------|--------|-------------------------|
+| You                       |  80.0% | Writer / Producer / Publisher |
+| Echo Valley               |  20.0% | Co-Writer               |
+────────────────────────────────────────────────────────
+Total Share: 100.0%
+
+PRO REGISTRATIONS:
+  • You: ASCAP
+  • Echo Valley: SESAC
+
+This split sheet represents the agreed publishing split
+for the above-referenced work. All parties have consented
+to the distribution of publishing income accordingly.

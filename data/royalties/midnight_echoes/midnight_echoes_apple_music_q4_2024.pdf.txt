@@ -1,0 +1,32 @@
+════════════════════════════════════════════════════════════════
+  Apple Music Royalty Statement
+  Work: Midnight Echoes
+  ISRC: USRC17607839
+  Period: Q4 2024
+  Generated: 2025-01-18
+════════════════════════════════════════════════════════════════
+
+STREAMING SUMMARY
+────────────────────────────────────────────────────────────────
+  Total Streams:       6,448,000
+  Mechanical Revenue:  $45,136.00
+  Performance Revenue: $2,321.28
+  ─────────────────────────────────────────
+  Gross Revenue:       $47,457.28
+  Distributor Fees:    $7,118.59 (15%)
+  ─────────────────────────────────────────
+  NET PAYMENT:         $40,338.69
+
+PAYMENT DETAILS
+────────────────────────────────────────────────────────────────
+  Payment Method:      Bank Transfer
+  Payment Date:        January 15, 2025
+  Reference:           APPLE_MUSIC_MidnightEchoes_Q42024
+  Currency:            USD
+
+SPLIT DISTRIBUTION
+────────────────────────────────────────────────────────────────
+  You.....................................  50.0%  $   20,169.34
+  Alex Rivers.............................  25.0%  $   10,084.67
+  Sunset Publishing.......................  15.0%  $    6,050.80
+  Producer Jay............................  10.0%  $    4,033.87

@@ -1,0 +1,47 @@
+# Dependencies
+node_modules/
+.venv/
+.venv-*/
+venv/
+ENV/
+
+# Next.js & Build outputs
+.next/
+out/
+build/
+dist/
+.vercel
+
+# Python & Pytest
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+*.egg-info/
+
+# Environment & Secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Databases & Vector Stores
+*.db
+*.sqlite
+*.sqlite3
+publishing.db
+data/vectorstore/
+data/evaluations/
+
+# User Uploaded Documents (Keep folder structure)
+data/uploads/*
+!data/uploads/.gitkeep
+
+# System & IDE
+.DS_Store
+*.pem
+.vscode/
+.idea/

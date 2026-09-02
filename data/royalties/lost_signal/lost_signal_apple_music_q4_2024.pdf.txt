@@ -1,0 +1,30 @@
+════════════════════════════════════════════════════════════════
+  Apple Music Royalty Statement
+  Work: Lost Signal
+  ISRC: USRC17607843
+  Period: Q4 2024
+  Generated: 2025-01-18
+════════════════════════════════════════════════════════════════
+
+STREAMING SUMMARY
+────────────────────────────────────────────────────────────────
+  Total Streams:       2,356,000
+  Mechanical Revenue:  $16,492.00
+  Performance Revenue: $848.16
+  ─────────────────────────────────────────
+  Gross Revenue:       $17,340.16
+  Distributor Fees:    $2,601.02 (15%)
+  ─────────────────────────────────────────
+  NET PAYMENT:         $14,739.14
+
+PAYMENT DETAILS
+────────────────────────────────────────────────────────────────
+  Payment Method:      Bank Transfer
+  Payment Date:        January 15, 2025
+  Reference:           APPLE_MUSIC_LostSignal_Q42024
+  Currency:            USD
+
+SPLIT DISTRIBUTION
+────────────────────────────────────────────────────────────────
+  You.....................................  80.0%  $   11,791.31
+  Echo Valley.............................  20.0%  $    2,947.83

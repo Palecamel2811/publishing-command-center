@@ -1,0 +1,30 @@
+════════════════════════════════════════════════════════════════
+  Spotify Royalty Statement
+  Work: Golden Hour
+  ISRC: USRC17607840
+  Period: Q2 2024
+  Generated: 2025-01-16
+════════════════════════════════════════════════════════════════
+
+STREAMING SUMMARY
+────────────────────────────────────────────────────────────────
+  Total Streams:       9,612,000
+  Mechanical Revenue:  $30,758.40
+  Performance Revenue: $2,306.88
+  ─────────────────────────────────────────
+  Gross Revenue:       $33,065.28
+  Distributor Fees:    $4,959.79 (15%)
+  ─────────────────────────────────────────
+  NET PAYMENT:         $28,105.49
+
+PAYMENT DETAILS
+────────────────────────────────────────────────────────────────
+  Payment Method:      Bank Transfer
+  Payment Date:        January 15, 2025
+  Reference:           SPOTIFY_GoldenHour_Q22024
+  Currency:            USD
+
+SPLIT DISTRIBUTION
+────────────────────────────────────────────────────────────────
+  Jordan Lee..............................  60.0%  $   16,863.29
+  You.....................................  40.0%  $   11,242.20

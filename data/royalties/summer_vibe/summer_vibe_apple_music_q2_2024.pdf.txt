@@ -1,0 +1,31 @@
+════════════════════════════════════════════════════════════════
+  Apple Music Royalty Statement
+  Work: Summer Vibe
+  ISRC: USRC17607842
+  Period: Q2 2024
+  Generated: 2025-01-16
+════════════════════════════════════════════════════════════════
+
+STREAMING SUMMARY
+────────────────────────────────────────────────────────────────
+  Total Streams:       3,780,000
+  Mechanical Revenue:  $26,460.00
+  Performance Revenue: $1,360.80
+  ─────────────────────────────────────────
+  Gross Revenue:       $27,820.80
+  Distributor Fees:    $4,173.12 (15%)
+  ─────────────────────────────────────────
+  NET PAYMENT:         $23,647.68
+
+PAYMENT DETAILS
+────────────────────────────────────────────────────────────────
+  Payment Method:      Bank Transfer
+  Payment Date:        January 15, 2025
+  Reference:           APPLE_MUSIC_SummerVibe_Q22024
+  Currency:            USD
+
+SPLIT DISTRIBUTION
+────────────────────────────────────────────────────────────────
+  Tropical Sun............................  40.0%  $    9,459.07
+  You.....................................  30.0%  $    7,094.30
+  Indie Records...........................  30.0%  $    7,094.30

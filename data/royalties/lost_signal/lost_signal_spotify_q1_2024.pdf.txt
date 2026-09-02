@@ -1,0 +1,30 @@
+════════════════════════════════════════════════════════════════
+  Spotify Royalty Statement
+  Work: Lost Signal
+  ISRC: USRC17607843
+  Period: Q1 2024
+  Generated: 2025-01-15
+════════════════════════════════════════════════════════════════
+
+STREAMING SUMMARY
+────────────────────────────────────────────────────────────────
+  Total Streams:       4,100,000
+  Mechanical Revenue:  $13,120.00
+  Performance Revenue: $984.00
+  ─────────────────────────────────────────
+  Gross Revenue:       $14,104.00
+  Distributor Fees:    $2,115.60 (15%)
+  ─────────────────────────────────────────
+  NET PAYMENT:         $11,988.40
+
+PAYMENT DETAILS
+────────────────────────────────────────────────────────────────
+  Payment Method:      Bank Transfer
+  Payment Date:        January 15, 2025
+  Reference:           SPOTIFY_LostSignal_Q12024
+  Currency:            USD
+
+SPLIT DISTRIBUTION
+────────────────────────────────────────────────────────────────
+  You.....................................  80.0%  $    9,590.72
+  Echo Valley.............................  20.0%  $    2,397.68

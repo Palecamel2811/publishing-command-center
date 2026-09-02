@@ -1,0 +1,30 @@
+════════════════════════════════════════════════════════════════
+  Youtube Royalty Statement
+  Work: Lost Signal
+  ISRC: USRC17607843
+  Period: Q1 2024
+  Generated: 2025-01-15
+════════════════════════════════════════════════════════════════
+
+STREAMING SUMMARY
+────────────────────────────────────────────────────────────────
+  Total Streams:       1,100,000
+  Mechanical Revenue:  $1,650.00
+  Performance Revenue: $165.00
+  ─────────────────────────────────────────
+  Gross Revenue:       $1,815.00
+  Distributor Fees:    $272.25 (15%)
+  ─────────────────────────────────────────
+  NET PAYMENT:         $1,542.75
+
+PAYMENT DETAILS
+────────────────────────────────────────────────────────────────
+  Payment Method:      Bank Transfer
+  Payment Date:        January 15, 2025
+  Reference:           YOUTUBE_LostSignal_Q12024
+  Currency:            USD
+
+SPLIT DISTRIBUTION
+────────────────────────────────────────────────────────────────
+  You.....................................  80.0%  $    1,234.20
+  Echo Valley.............................  20.0%  $      308.55

@@ -1,0 +1,32 @@
+════════════════════════════════════════════════════════════════
+  Youtube Royalty Statement
+  Work: Midnight Echoes
+  ISRC: USRC17607839
+  Period: Q4 2024
+  Generated: 2025-01-18
+════════════════════════════════════════════════════════════════
+
+STREAMING SUMMARY
+────────────────────────────────────────────────────────────────
+  Total Streams:       3,844,000
+  Mechanical Revenue:  $5,766.00
+  Performance Revenue: $576.60
+  ─────────────────────────────────────────
+  Gross Revenue:       $6,342.60
+  Distributor Fees:    $951.39 (15%)
+  ─────────────────────────────────────────
+  NET PAYMENT:         $5,391.21
+
+PAYMENT DETAILS
+────────────────────────────────────────────────────────────────
+  Payment Method:      Bank Transfer
+  Payment Date:        January 15, 2025
+  Reference:           YOUTUBE_MidnightEchoes_Q42024
+  Currency:            USD
+
+SPLIT DISTRIBUTION
+────────────────────────────────────────────────────────────────
+  You.....................................  50.0%  $    2,695.61
+  Alex Rivers.............................  25.0%  $    1,347.80
+  Sunset Publishing.......................  15.0%  $      808.68
+  Producer Jay............................  10.0%  $      539.12

@@ -1,0 +1,30 @@
+════════════════════════════════════════════════════════════════
+  Apple Music Royalty Statement
+  Work: Golden Hour
+  ISRC: USRC17607840
+  Period: Q4 2024
+  Generated: 2025-01-18
+════════════════════════════════════════════════════════════════
+
+STREAMING SUMMARY
+────────────────────────────────────────────────────────────────
+  Total Streams:       5,084,000
+  Mechanical Revenue:  $35,588.00
+  Performance Revenue: $1,830.24
+  ─────────────────────────────────────────
+  Gross Revenue:       $37,418.24
+  Distributor Fees:    $5,612.74 (15%)
+  ─────────────────────────────────────────
+  NET PAYMENT:         $31,805.50
+
+PAYMENT DETAILS
+────────────────────────────────────────────────────────────────
+  Payment Method:      Bank Transfer
+  Payment Date:        January 15, 2025
+  Reference:           APPLE_MUSIC_GoldenHour_Q42024
+  Currency:            USD
+
+SPLIT DISTRIBUTION
+────────────────────────────────────────────────────────────────
+  Jordan Lee..............................  60.0%  $   19,083.30
+  You.....................................  40.0%  $   12,722.20
