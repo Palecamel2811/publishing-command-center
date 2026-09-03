@@ -426,79 +426,89 @@ export function UploadZone({ onUploadComplete }: UploadZoneProps) {
       </AnimatePresence>
 
       {/* Ingested Catalog Documents Header with Bulk Selection */}
-      {uploadedDocs.length > 0 && (
-        <motion.div
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          className="space-y-3"
-        >
-          <div className="flex flex-wrap items-center justify-between gap-3 bg-white/[0.02] p-3 rounded-xl border border-white/10">
-            <div className="flex items-center gap-3">
-              <label className="flex items-center gap-2 text-xs text-white/70 cursor-pointer select-none">
-                <input
-                  type="checkbox"
-                  checked={selectedDocs.length === uploadedDocs.length && uploadedDocs.length > 0}
-                  onChange={toggleSelectAll}
-                  className="rounded border-white/20 bg-black/40 text-cyan-500 focus:ring-cyan-500"
-                />
-                <span className="font-medium">
-                  {selectedDocs.length > 0 ? `Selected (${selectedDocs.length}/${uploadedDocs.length})` : 'Select All'}
-                </span>
-              </label>
-              <h3 className="text-xs text-white/40 border-l border-white/10 pl-3">
-                Original Uploaded Assets ({uploadedDocs.length})
-              </h3>
-            </div>
-
-            <div className="flex items-center gap-2">
-              {selectedDocs.length > 0 && (
-                <>
-                  <button
-                    onClick={handleBulkExport}
-                    className="px-3 py-1.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 text-xs font-medium border border-cyan-500/20 transition-all flex items-center gap-1.5"
-                    title="Export selected document metadata as CSV"
-                  >
-                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                    </svg>
-                    Export Metadata ({selectedDocs.length})
-                  </button>
-
-                  <button
-                    onClick={handleBulkDelete}
-                    disabled={isBulkDeleting}
-                    className="px-3 py-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 text-xs font-medium border border-red-500/30 transition-all flex items-center gap-1.5"
-                  >
-                    {isBulkDeleting ? (
-                      <svg className="w-3.5 h-3.5 animate-spin text-red-400" fill="none" viewBox="0 0 24 24">
-                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
-                      </svg>
-                    ) : (
-                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
-                      </svg>
-                    )}
-                    Delete Selected ({selectedDocs.length})
-                  </button>
-                </>
-              )}
-
-              <button
-                onClick={fetchHistory}
-                disabled={isRefreshing}
-                className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors flex items-center gap-1 px-2 py-1.5 rounded hover:bg-white/5 disabled:opacity-50"
-              >
-                <svg className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-                </svg>
-                {isRefreshing ? 'Refreshing...' : 'Refresh'}
-              </button>
-
-            </div>
+      <motion.div
+        initial={{ opacity: 0 }}
+        animate={{ opacity: 1 }}
+        className="space-y-3"
+      >
+        <div className="flex flex-wrap items-center justify-between gap-3 bg-white/[0.02] p-3 rounded-xl border border-white/10">
+          <div className="flex items-center gap-3">
+            <label className="flex items-center gap-2 text-xs text-white/70 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                checked={selectedDocs.length === uploadedDocs.length && uploadedDocs.length > 0}
+                onChange={toggleSelectAll}
+                disabled={uploadedDocs.length === 0}
+                className="rounded border-white/20 bg-black/40 text-cyan-500 focus:ring-cyan-500 disabled:opacity-30"
+              />
+              <span className="font-medium">
+                {selectedDocs.length > 0 ? `Selected (${selectedDocs.length}/${uploadedDocs.length})` : 'Select All'}
+              </span>
+            </label>
+            <h3 className="text-xs text-white/40 border-l border-white/10 pl-3">
+              Original Uploaded Assets ({uploadedDocs.length})
+            </h3>
           </div>
-          
-          {/* Document Asset Grid */}
+
+          <div className="flex items-center gap-2">
+            {selectedDocs.length > 0 && (
+              <>
+                <button
+                  onClick={handleBulkExport}
+                  className="px-3 py-1.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 text-xs font-medium border border-cyan-500/20 transition-all flex items-center gap-1.5"
+                  title="Export selected document metadata as CSV"
+                >
+                  <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                  Export Metadata ({selectedDocs.length})
+                </button>
+
+                <button
+                  onClick={handleBulkDelete}
+                  disabled={isBulkDeleting}
+                  className="px-3 py-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 text-xs font-medium border border-red-500/30 transition-all flex items-center gap-1.5"
+                >
+                  {isBulkDeleting ? (
+                    <svg className="w-3.5 h-3.5 animate-spin text-red-400" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                  ) : (
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                    </svg>
+                  )}
+                  Delete Selected ({selectedDocs.length})
+                </button>
+              </>
+            )}
+
+            <button
+              onClick={fetchHistory}
+              disabled={isRefreshing}
+              className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors flex items-center gap-1 px-2 py-1.5 rounded hover:bg-white/5 disabled:opacity-50"
+            >
+              <svg className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+              </svg>
+              {isRefreshing ? 'Refreshing...' : 'Refresh'}
+            </button>
+          </div>
+        </div>
+        
+        {/* Empty State Prompt */}
+        {uploadedDocs.length === 0 ? (
+          <div className="panel-card p-8 text-center border-dashed border-white/10">
+            <svg className="w-10 h-10 text-white/20 mx-auto mb-2" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 13h6m-3-3v6m5 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+            </svg>
+            <p className="text-sm font-medium text-white/70">No ingested catalog assets yet</p>
+            <p className="text-xs text-white/40 mt-1">
+              Select or drop split sheets, royalty statements, or sync contracts above, then click 'Upload & Process'.
+            </p>
+          </div>
+        ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
             {uploadedDocs.map((doc) => {
               const isSelected = selectedDocs.includes(doc.rawFilename);
@@ -603,8 +613,7 @@ export function UploadZone({ onUploadComplete }: UploadZoneProps) {
               );
             })}
           </div>
-        </motion.div>
-      )}
+      </motion.div>
 
       {/* In-App Document Preview Modal */}
       <DocumentViewerModal
