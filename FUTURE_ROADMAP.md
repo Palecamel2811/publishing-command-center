@@ -43,15 +43,20 @@ Features that expand business capabilities for music publishing and multi-indust
 
 ---
 
-## 🔬 Phase 3: Advanced RAG & Multi-Tenancy Architecture (Longer Term)
+## 🔬 Phase 3: Advanced RAG, SQLGate & Multi-Tenancy Architecture (Longer Term)
 
 Advanced architectural patterns to deploy if scaling to multi-tenant SaaS or handling massive catalog sizes (>100,000 documents).
 
-### 1. Hierarchical Parent/Child Chunking
+### 1. SQLGate & PostgreSQL Enterprise Database Scaling
+- **SQLGate Direct Management Adapter**: Connect SQLGate to local `publishing.db` SQLite and production cloud PostgreSQL (Supabase / Heroku Postgres / AWS RDS) for visual data auditing and batch schema management.
+- **High-Volume Query Indexing**: Database B-tree indexing on `isrc`, `work_id`, `period_start`, and `platform` columns for sub-10ms query execution on catalogs exceeding 100,000 royalty entries.
+- **SQLGate Bulk Audit Exporter**: Custom multi-table JOIN export routines generating formatted Excel (`.xlsx`), JSON, and PDF audit packages for rightsholder distribution.
+
+### 2. Hierarchical Parent/Child Chunking
 - **Parent/Child Indexing**: Store fine-grained child chunks (128 tokens) for vector similarity search alongside parent context blocks (1024 tokens) for LLM synthesis.
 - **Use Case**: Best for lengthy legal contracts where specific sub-clauses need tight embedding matching without losing overall section context.
 
-### 2. Production Multi-Tenancy & Enterprise Auth
+### 3. Production Multi-Tenancy & Enterprise Auth
 - **Multi-Tenant Data Isolation**: Organization-level workspace boundaries in SQLite/PostgreSQL and ChromaDB tenant namespaces.
 - **Role-Based Access Control (RBAC)**: Admin, Royalty Manager, and Rightsholder view permissions.
 - **Cloud Vector Store Migration**: Seamless adapter to migrate ChromaDB to Pinecone, Qdrant, or PGVector for cloud deployment.
