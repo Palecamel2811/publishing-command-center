@@ -1,8 +1,8 @@
 'use client';
 
 import { useQuery } from '@tanstack/react-query';
+import { API_BASE } from '@/lib/config';
 
-const API_BASE = (process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000').replace(/\/+$/, '');
 
 export function useDashboardData(period?: string, startDate?: string, endDate?: string) {
   return useQuery({

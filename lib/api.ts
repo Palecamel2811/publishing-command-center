@@ -2,11 +2,7 @@
  * API client for the Publishing & Rights Command Center backend.
  */
 
-const DEFAULT_CLOUD_BACKEND = 'https://publishing-command-center-d6e1f2c72672.herokuapp.com';
-const API_BASE = (
-  process.env.NEXT_PUBLIC_API_URL || 
-  (typeof window !== 'undefined' && window.location.hostname.includes('vercel.app') ? DEFAULT_CLOUD_BACKEND : 'http://localhost:8000')
-).replace(/\/+$/, '');
+import { API_BASE } from './config';
 
 
 async function request<T>(

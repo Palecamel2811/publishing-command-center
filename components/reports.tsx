@@ -2,6 +2,8 @@
 
 import { useMemo } from 'react';
 import { formatCurrency } from '@/types';
+import { API_BASE } from '@/lib/config';
+
 
 interface ReportsProps {
   data?: any;
@@ -43,9 +45,9 @@ export function Reports({ data, isLoading, error }: ReportsProps) {
   }
 
   const handleExportCSV = (type: string = 'royalties') => {
-    const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-    window.open(`${apiUrl}/api/reports/export?report_type=${type}`, '_blank');
+    window.open(`${API_BASE}/api/reports/export?report_type=${type}`, '_blank');
   };
+
 
   return (
     <div className="max-w-6xl mx-auto space-y-6">

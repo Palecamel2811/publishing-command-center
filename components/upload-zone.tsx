@@ -2,9 +2,10 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { uploadFiles, uploadFile, getIngestionHistory, deleteDocument } from '@/lib/api';
-
+import { uploadFiles, uploadFile, getIngestionHistory, deleteDocument, bulkDeleteDocuments } from '@/lib/api';
+import { API_BASE } from '@/lib/config';
 import { DocumentViewerModal } from '@/components/document-viewer-modal';
+
 
 interface UploadZoneProps {
   onUploadComplete?: (result: any) => void;
@@ -561,13 +562,14 @@ export function UploadZone({ onUploadComplete }: UploadZoneProps) {
 
                       {/* Download Original Document */}
                       <a
-                        href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/documents/view/${encodeURIComponent(doc.rawFilename || doc.filename)}?download=true`}
+                        href={`${API_BASE}/api/documents/view/${encodeURIComponent(doc.rawFilename || doc.filename)}?download=true`}
                         target="_blank"
                         rel="noopener noreferrer"
                         onClick={(e) => e.stopPropagation()}
                         className="p-1.5 rounded-lg text-white/40 hover:text-emerald-300 hover:bg-emerald-500/10 transition-all flex items-center gap-1 text-xs"
                         title="Download file"
                       >
+
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                         </svg>
@@ -613,7 +615,9 @@ export function UploadZone({ onUploadComplete }: UploadZoneProps) {
               );
             })}
           </div>
+        )}
       </motion.div>
+
 
       {/* In-App Document Preview Modal */}
       <DocumentViewerModal

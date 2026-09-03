@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
+import { API_BASE } from '@/lib/config';
 
 interface DocumentViewerModalProps {
   filename: string | null;
@@ -15,9 +16,9 @@ export function DocumentViewerModal({ filename, isOpen, onClose }: DocumentViewe
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState<boolean>(false);
 
-  const apiUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000';
-  const fileUrl = filename ? `${apiUrl}/api/documents/view/${encodeURIComponent(filename)}` : '';
-  const downloadUrl = filename ? `${apiUrl}/api/documents/view/${encodeURIComponent(filename)}?download=true` : '';
+  const fileUrl = filename ? `${API_BASE}/api/documents/view/${encodeURIComponent(filename)}` : '';
+  const downloadUrl = filename ? `${API_BASE}/api/documents/view/${encodeURIComponent(filename)}?download=true` : '';
+
 
   useEffect(() => {
     if (!filename || !isOpen) {
