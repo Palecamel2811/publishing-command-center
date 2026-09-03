@@ -214,6 +214,17 @@ async def lifespan(app: FastAPI):
     # Initialize relational database
     init_db()
     logger.info("Database tables initialized")
+
+    # Auto-populate sample dataset on cloud startup if database is empty
+    with Session(engine) as session:
+        first_work = session.exec(select(Work)).first()
+        if not first_work:
+            logger.info("Empty database detected on startup — auto-populating 88 sample documents...")
+            try:
+                import subprocess
+                subprocess.Popen(["python3", "scripts/populate_sample_data.py"])
+            except Exception as pop_err:
+                logger.warning(f"Auto-populate trigger failed: {pop_err}")
     
     # Warm up BM25 index with existing documents
     _warmup_bm25_index()
@@ -221,6 +232,7 @@ async def lifespan(app: FastAPI):
     app.state.start_time = time.time()
     logger.info("All services initialized")
     yield
+
     
     # Shutdown
     logger.info("Shutting down Publishing & Rights Command Center...")
