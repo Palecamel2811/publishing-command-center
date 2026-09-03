@@ -177,6 +177,61 @@ export function UploadZone({ onUploadComplete }: UploadZoneProps) {
     ? Math.round((files.filter(f => f.status === 'success').length / files.length) * 100)
     : 0;
 
+  const [selectedDocs, setSelectedDocs] = useState<string[]>([]);
+  const [isBulkDeleting, setIsBulkDeleting] = useState(false);
+
+  const toggleSelectDoc = (rawFilename: string) => {
+    setSelectedDocs(prev => 
+      prev.includes(rawFilename) 
+        ? prev.filter(f => f !== rawFilename) 
+        : [...prev, rawFilename]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedDocs.length === uploadedDocs.length) {
+      setSelectedDocs([]);
+    } else {
+      setSelectedDocs(uploadedDocs.map(d => d.rawFilename));
+    }
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedDocs.length === 0) return;
+    if (!confirm(`Are you sure you want to delete ${selectedDocs.length} selected document(s)?\nThis will remove all associated vector embeddings, splits, and royalty entries.`)) {
+      return;
+    }
+
+    setIsBulkDeleting(true);
+    try {
+      await bulkDeleteDocuments(selectedDocs);
+      setSelectedDocs([]);
+      fetchHistory();
+      if (onUploadComplete) {
+        onUploadComplete(null);
+      }
+    } catch (err: any) {
+      alert(`Bulk delete failed: ${err.message}`);
+    } finally {
+      setIsBulkDeleting(false);
+    }
+  };
+
+  const handleBulkExport = () => {
+    if (selectedDocs.length === 0) return;
+    const selectedItems = uploadedDocs.filter(d => selectedDocs.includes(d.rawFilename));
+    const csvContent = "data:text/csv;charset=utf-8," + 
+      "Filename,Chunks,Associated Works,Date Added\n" +
+      selectedItems.map(d => `"${d.rawFilename}",${d.chunks},"${d.works.join('; ')}",${d.date}`).join("\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `catalog_export_${new Date().toISOString().split('T')[0]}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
+
   return (
     <div className="space-y-6">
       {/* Upload Zone */}
@@ -220,7 +275,7 @@ export function UploadZone({ onUploadComplete }: UploadZoneProps) {
         </div>
       </div>
 
-      {/* Pending Files List */}
+      {/* Selected File Queue Preview */}
       <AnimatePresence>
         {files.length > 0 && (
           <motion.div
@@ -230,31 +285,27 @@ export function UploadZone({ onUploadComplete }: UploadZoneProps) {
             className="space-y-3"
           >
             <div className="flex items-center justify-between">
-              <h3 className="text-sm font-medium text-white/60">
-                Selected Files ({files.length})
-              </h3>
+              <h3 className="text-sm font-medium text-white/60">Selected Files Ready to Process ({files.length})</h3>
               <button
                 onClick={clearQueue}
                 className="text-xs text-white/40 hover:text-white/70 transition-colors"
               >
-                Clear queue
+                Clear Queue
               </button>
             </div>
 
-            <div className="space-y-2 max-h-60 overflow-y-auto">
+            <div className="space-y-2">
               {files.map((file, index) => (
                 <motion.div
                   key={`${file.file.name}-${index}`}
                   initial={{ opacity: 0, x: -10 }}
                   animate={{ opacity: 1, x: 0 }}
                   exit={{ opacity: 0, x: 10 }}
-                  className="flex items-center justify-between p-3 rounded-lg bg-white/[0.02] border border-white/5"
+                  className="panel-card p-3 flex items-center justify-between"
                 >
                   <div className="flex items-center gap-3 min-w-0">
-                    <div className="w-8 h-8 rounded-lg bg-white/5 flex items-center justify-center flex-shrink-0">
-                      <svg className="w-4 h-4 text-white/40" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
+                    <div className="w-8 h-8 rounded bg-white/5 flex items-center justify-center text-xs font-mono text-cyan-400">
+                      {file.file.name.split('.').pop()?.toUpperCase()}
                     </div>
                     <div className="min-w-0">
                       <p className="text-sm text-white/80 truncate">{file.file.name}</p>
@@ -264,7 +315,6 @@ export function UploadZone({ onUploadComplete }: UploadZoneProps) {
                     </div>
                   </div>
 
-                  {/* Status Badge */}
                   <div className="flex items-center gap-3 flex-shrink-0">
                     {file.status === 'uploading' && (
                       <span className="text-xs text-cyan-400 flex items-center gap-1.5">
@@ -280,7 +330,7 @@ export function UploadZone({ onUploadComplete }: UploadZoneProps) {
                         <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
                         </svg>
-                        Ready
+                        Done
                       </span>
                     )}
                     {file.status === 'error' && (
@@ -292,7 +342,6 @@ export function UploadZone({ onUploadComplete }: UploadZoneProps) {
                       </span>
                     )}
 
-                    {/* Remove */}
                     <button
                       onClick={(e) => { e.stopPropagation(); removeFile(index); }}
                       className="text-white/30 hover:text-white/60 transition-colors"
@@ -310,139 +359,216 @@ export function UploadZone({ onUploadComplete }: UploadZoneProps) {
             {/* Upload Button */}
             <div className="flex items-center justify-between pt-2">
               <span className="text-sm text-white/60">
-                Progress: {progress}%
+                Ready to upload: {files.filter(f => f.status === 'idle').length} file(s)
               </span>
               <button
                 onClick={handleUpload}
                 disabled={isUploading || files.filter(f => f.status === 'idle').length === 0}
                 className={`
-                  px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200
-                  ${isUploading 
-                    ? 'bg-white/10 text-white/40 cursor-not-allowed' 
-                    : 'bg-gradient-to-r from-cyan-500 to-blue-600 text-white hover:from-cyan-400 hover:to-blue-500 shadow-lg shadow-cyan-500/20'}
+                  px-5 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2
+                  ${isUploading || files.filter(f => f.status === 'idle').length === 0
+                    ? 'bg-white/10 text-white/40 cursor-not-allowed'
+                    : 'bg-cyan-500 hover:bg-cyan-400 text-black font-semibold shadow-lg shadow-cyan-500/20'
+                  }
                 `}
               >
-                {isUploading ? 'Uploading & Indexing...' : 'Upload & Process'}
+                {isUploading ? (
+                  <>
+                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    Uploading...
+                  </>
+                ) : (
+                  <>
+                    <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    Upload & Process
+                  </>
+                )}
               </button>
             </div>
           </motion.div>
         )}
       </AnimatePresence>
 
-      {/* Uploaded Documents */}
+      {/* Ingested Catalog Documents Header with Bulk Selection */}
       {uploadedDocs.length > 0 && (
         <motion.div
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           className="space-y-3"
         >
-          <div className="flex items-center justify-between">
-            <h3 className="text-sm font-medium text-white/60">Ingested Catalog Documents ({uploadedDocs.length})</h3>
-            <button
-              onClick={fetchHistory}
-              className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors flex items-center gap-1"
-            >
-              <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
-              </svg>
-              Refresh
-            </button>
+          <div className="flex flex-wrap items-center justify-between gap-3 bg-white/[0.02] p-3 rounded-xl border border-white/10">
+            <div className="flex items-center gap-3">
+              <label className="flex items-center gap-2 text-xs text-white/70 cursor-pointer select-none">
+                <input
+                  type="checkbox"
+                  checked={selectedDocs.length === uploadedDocs.length && uploadedDocs.length > 0}
+                  onChange={toggleSelectAll}
+                  className="rounded border-white/20 bg-black/40 text-cyan-500 focus:ring-cyan-500"
+                />
+                <span className="font-medium">
+                  {selectedDocs.length > 0 ? `Selected (${selectedDocs.length}/${uploadedDocs.length})` : 'Select All'}
+                </span>
+              </label>
+              <h3 className="text-xs text-white/40 border-l border-white/10 pl-3">
+                Original Uploaded Assets ({uploadedDocs.length})
+              </h3>
+            </div>
+
+            <div className="flex items-center gap-2">
+              {selectedDocs.length > 0 && (
+                <>
+                  <button
+                    onClick={handleBulkExport}
+                    className="px-3 py-1.5 rounded-lg bg-cyan-500/10 hover:bg-cyan-500/20 text-cyan-400 text-xs font-medium border border-cyan-500/20 transition-all flex items-center gap-1.5"
+                    title="Export selected document metadata as CSV"
+                  >
+                    <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                    </svg>
+                    Export Metadata ({selectedDocs.length})
+                  </button>
+
+                  <button
+                    onClick={handleBulkDelete}
+                    disabled={isBulkDeleting}
+                    className="px-3 py-1.5 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-400 text-xs font-medium border border-red-500/30 transition-all flex items-center gap-1.5"
+                  >
+                    {isBulkDeleting ? (
+                      <svg className="w-3.5 h-3.5 animate-spin text-red-400" fill="none" viewBox="0 0 24 24">
+                        <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                        <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                      </svg>
+                    ) : (
+                      <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                      </svg>
+                    )}
+                    Delete Selected ({selectedDocs.length})
+                  </button>
+                </>
+              )}
+
+              <button
+                onClick={fetchHistory}
+                className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors flex items-center gap-1 px-2 py-1.5 rounded hover:bg-white/5"
+              >
+                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
+                </svg>
+                Refresh
+              </button>
+            </div>
           </div>
           
+          {/* Document Asset Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-            {uploadedDocs.map((doc) => (
-              <motion.div
-                key={doc.id || doc.rawFilename}
-                initial={{ opacity: 0, scale: 0.95 }}
-                animate={{ opacity: 1, scale: 1 }}
-                className="panel-card p-4 hover:border-white/20 transition-all group"
-              >
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex items-center gap-2 min-w-0">
-                    <div className="w-8 h-8 rounded-lg bg-cyan-500/10 flex items-center justify-center flex-shrink-0">
-                      <svg className="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                      </svg>
-                    </div>
-                    <div className="min-w-0">
-                      <p className="text-sm font-medium text-white/80 truncate" title={doc.rawFilename}>{doc.filename}</p>
-                      <p className="text-xs text-white/40">Added {doc.date}</p>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2 flex-shrink-0">
-                    <span className="text-xs font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">
-                      Indexed
-                    </span>
-
-                    {/* View Original Document in Frontend Modal */}
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setPreviewFilename(doc.rawFilename || doc.filename);
-                      }}
-                      className="p-1.5 rounded-lg text-white/40 hover:text-cyan-300 hover:bg-cyan-500/10 transition-all flex items-center gap-1 text-xs"
-                      title="View file inside frontend preview modal"
-                    >
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                      </svg>
-                      <span className="hidden sm:inline">View</span>
-                    </button>
-
-                    {/* Download Document Button */}
-                    <a
-                      href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/documents/view/${encodeURIComponent(doc.rawFilename || doc.filename)}?download=true`}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      onClick={(e) => e.stopPropagation()}
-                      className="p-1.5 rounded-lg text-white/40 hover:text-emerald-300 hover:bg-emerald-500/10 transition-all flex items-center gap-1 text-xs"
-                      title="Download original file"
-                    >
-                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-                      </svg>
-                      <span className="hidden sm:inline">Download</span>
-                    </a>
-
-                    {/* Delete Document Button */}
-                    <button
-                      onClick={(e) => handleDeleteDoc(doc.rawFilename || doc.filename, e)}
-                      disabled={deletingFilename === (doc.rawFilename || doc.filename)}
-                      className="p-1.5 rounded-lg text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-all"
-                      title="Remove document and vector embeddings"
-                    >
-                      {deletingFilename === (doc.rawFilename || doc.filename) ? (
-                        <svg className="w-4 h-4 animate-spin text-red-400" fill="none" viewBox="0 0 24 24">
-                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+            {uploadedDocs.map((doc) => {
+              const isSelected = selectedDocs.includes(doc.rawFilename);
+              return (
+                <motion.div
+                  key={doc.id || doc.rawFilename}
+                  initial={{ opacity: 0, scale: 0.95 }}
+                  animate={{ opacity: 1, scale: 1 }}
+                  className={`panel-card p-4 transition-all group ${isSelected ? 'border-cyan-500/50 bg-cyan-500/[0.03]' : 'hover:border-white/20'}`}
+                >
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center gap-3 min-w-0">
+                      <input
+                        type="checkbox"
+                        checked={isSelected}
+                        onChange={() => toggleSelectDoc(doc.rawFilename)}
+                        className="rounded border-white/20 bg-black/40 text-cyan-500 focus:ring-cyan-500 cursor-pointer"
+                      />
+                      <div className="w-8 h-8 rounded-lg bg-cyan-500/10 flex items-center justify-center flex-shrink-0">
+                        <svg className="w-4 h-4 text-cyan-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
                         </svg>
-                      ) : (
+                      </div>
+                      <div className="min-w-0">
+                        <p className="text-sm font-medium text-white/80 truncate" title={doc.rawFilename}>{doc.filename}</p>
+                        <p className="text-xs text-white/40">Added {doc.date}</p>
+                      </div>
+                    </div>
+
+                    <div className="flex items-center gap-2 flex-shrink-0">
+                      <span className="text-xs font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded">
+                        Indexed
+                      </span>
+
+                      {/* View Original Document */}
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setPreviewFilename(doc.rawFilename || doc.filename);
+                        }}
+                        className="p-1.5 rounded-lg text-white/40 hover:text-cyan-300 hover:bg-cyan-500/10 transition-all flex items-center gap-1 text-xs"
+                        title="View original file"
+                      >
                         <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
                         </svg>
-                      )}
-                    </button>
-                  </div>
-                </div>
+                        <span className="hidden sm:inline">View</span>
+                      </button>
 
-                {doc.works.length > 0 && (
-                  <div className="flex flex-wrap gap-1 mt-2">
-                    {doc.works.slice(0, 3).map((work: string) => (
-                      <span key={work} className="text-xs bg-white/5 text-cyan-300/80 px-2 py-0.5 rounded border border-white/5">
-                        Work: {work}
-                      </span>
-                    ))}
-                    {doc.works.length > 3 && (
-                      <span className="text-xs bg-white/5 text-white/40 px-2 py-0.5 rounded">
-                        +{doc.works.length - 3}
-                      </span>
-                    )}
+                      {/* Download Original Document */}
+                      <a
+                        href={`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/documents/view/${encodeURIComponent(doc.rawFilename || doc.filename)}?download=true`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        onClick={(e) => e.stopPropagation()}
+                        className="p-1.5 rounded-lg text-white/40 hover:text-emerald-300 hover:bg-emerald-500/10 transition-all flex items-center gap-1 text-xs"
+                        title="Download file"
+                      >
+                        <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                        </svg>
+                        <span className="hidden sm:inline">Download</span>
+                      </a>
+
+                      {/* Delete Document */}
+                      <button
+                        onClick={(e) => handleDeleteDoc(doc.rawFilename || doc.filename, e)}
+                        disabled={deletingFilename === (doc.rawFilename || doc.filename)}
+                        className="p-1.5 rounded-lg text-white/30 hover:text-red-400 hover:bg-red-500/10 transition-all"
+                        title="Remove document"
+                      >
+                        {deletingFilename === (doc.rawFilename || doc.filename) ? (
+                          <svg className="w-4 h-4 animate-spin text-red-400" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                          </svg>
+                        ) : (
+                          <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+                          </svg>
+                        )}
+                      </button>
+                    </div>
                   </div>
-                )}
-              </motion.div>
-            ))}
+
+                  {doc.works.length > 0 && (
+                    <div className="flex flex-wrap gap-1 mt-2 pl-7">
+                      {doc.works.slice(0, 3).map((work: string) => (
+                        <span key={work} className="text-xs bg-white/5 text-cyan-300/80 px-2 py-0.5 rounded border border-white/5">
+                          Work: {work}
+                        </span>
+                      ))}
+                      {doc.works.length > 3 && (
+                        <span className="text-xs bg-white/5 text-white/40 px-2 py-0.5 rounded">
+                          +{doc.works.length - 3}
+                        </span>
+                      )}
+                    </div>
+                  )}
+                </motion.div>
+              );
+            })}
           </div>
         </motion.div>
       )}

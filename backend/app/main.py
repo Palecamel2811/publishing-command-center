@@ -809,6 +809,69 @@ async def delete_document(filename: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+@app.post("/api/documents/bulk-delete")
+async def bulk_delete_documents(payload: dict[str, list[str]]):
+    """Bulk delete multiple documents, their vector chunks, and relational records."""
+    filenames = payload.get("filenames", [])
+    if not filenames:
+        raise HTTPException(status_code=400, detail="No filenames provided for bulk deletion")
+
+    try:
+        store = _get_vector_store()
+        total_chunks = 0
+        total_records = 0
+
+        with Session(engine) as session:
+            for filename in filenames:
+                total_chunks += store.delete_by_filename(filename)
+
+                doc_chunks = session.exec(select(DocumentChunk).where(DocumentChunk.source_filename == filename)).all()
+                for dc in doc_chunks:
+                    session.delete(dc)
+                total_records += len(doc_chunks)
+
+                splits = session.exec(select(Split).where(Split.source_document == filename)).all()
+                affected_work_ids = {s.work_id for s in splits if s.work_id}
+                for s in splits:
+                    session.delete(s)
+                total_records += len(splits)
+
+                royalties = session.exec(select(RelRoyaltyEntry).where(RelRoyaltyEntry.source_document == filename)).all()
+                affected_work_ids.update({r.work_id for r in royalties if r.work_id})
+                for r in royalties:
+                    session.delete(r)
+                total_records += len(royalties)
+
+                for wid in affected_work_ids:
+                    work = session.exec(select(Work).where(Work.id == wid)).first()
+                    if work:
+                        remaining_royalties = session.exec(select(RelRoyaltyEntry).where(RelRoyaltyEntry.work_id == wid)).all()
+                        remaining_splits = session.exec(select(Split).where(Split.work_id == wid)).all()
+                        remaining_syncs = session.exec(select(RelSyncLicense).where(RelSyncLicense.work_id == wid)).all()
+
+                        if not remaining_royalties and not remaining_splits and not remaining_syncs:
+                            store.delete_by_work(work.title)
+                            session.delete(work)
+                        else:
+                            r_sum = sum(r.net_amount for r in remaining_royalties)
+                            s_sum = sum(s.fee * 0.5 for s in remaining_syncs)
+                            work.total_earnings = r_sum + s_sum
+                            session.add(work)
+
+            session.commit()
+
+        return {
+            "status": "success",
+            "deleted_count": len(filenames),
+            "total_chunks_deleted": total_chunks,
+            "total_records_deleted": total_records,
+        }
+    except Exception as e:
+        logger.error(f"Failed to bulk delete documents: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+
 @app.delete("/api/works/{work_id}")
 async def delete_work(work_id: str):
     """Delete a work and all associated splits, royalties, and sync licenses."""
