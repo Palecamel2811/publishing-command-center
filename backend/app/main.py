@@ -752,8 +752,9 @@ async def view_document(filename: str, download: bool = False):
     raise HTTPException(status_code=404, detail=f"Document '{filename}' not found on disk")
 
 
-@app.post("/api/documents/bulk-delete")
+@app.post("/api/documents-bulk/delete")
 async def bulk_delete_documents(payload: dict[str, list[str]]):
+
     """Bulk delete multiple documents, their vector chunks, and relational records."""
     filenames = payload.get("filenames", [])
     if not filenames:

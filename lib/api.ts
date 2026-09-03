@@ -109,11 +109,12 @@ export async function deleteDocument(filename: string) {
 }
 
 export async function bulkDeleteDocuments(filenames: string[]) {
-  return request<{ status: string; deleted_count: number; total_chunks_deleted: number; total_records_deleted: number }>('/api/documents/bulk-delete', {
+  return request<{ status: string; deleted_count: number; total_chunks_deleted: number; total_records_deleted: number }>('/api/documents-bulk/delete', {
     method: 'POST',
     body: JSON.stringify({ filenames }),
   });
 }
+
 
 
 // ── RAG Query ───────────────────────────────────────────────────────────────
