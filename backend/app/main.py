@@ -752,62 +752,6 @@ async def view_document(filename: str, download: bool = False):
     raise HTTPException(status_code=404, detail=f"Document '{filename}' not found on disk")
 
 
-@app.delete("/api/documents/{filename:path}")
-async def delete_document(filename: str):
-    """Delete a document, its vector store chunks, and relational records."""
-    try:
-        with Session(engine) as session:
-            # Delete relational document chunks
-            doc_chunks = session.exec(select(DocumentChunk).where(DocumentChunk.source_filename == filename)).all()
-
-            for dc in doc_chunks:
-                session.delete(dc)
-
-            # Delete splits referencing this source document
-            splits = session.exec(select(Split).where(Split.source_document == filename)).all()
-            affected_work_ids = {s.work_id for s in splits if s.work_id}
-            for s in splits:
-                session.delete(s)
-
-            # Delete royalties referencing this source document
-            royalties = session.exec(select(RelRoyaltyEntry).where(RelRoyaltyEntry.source_document == filename)).all()
-            affected_work_ids.update({r.work_id for r in royalties if r.work_id})
-            for r in royalties:
-                session.delete(r)
-
-            # Recalculate earnings for affected works; remove orphan works
-            for wid in affected_work_ids:
-                work = session.exec(select(Work).where(Work.id == wid)).first()
-                if work:
-                    remaining_royalties = session.exec(select(RelRoyaltyEntry).where(RelRoyaltyEntry.work_id == wid)).all()
-                    remaining_splits = session.exec(select(Split).where(Split.work_id == wid)).all()
-                    remaining_syncs = session.exec(select(RelSyncLicense).where(RelSyncLicense.work_id == wid)).all()
-
-                    if not remaining_royalties and not remaining_splits and not remaining_syncs:
-                        # Work is completely empty — delete it so it doesn't linger on dashboard
-                        store = _get_vector_store()
-                        store.delete_by_work(work.title)
-                        session.delete(work)
-                    else:
-                        r_sum = sum(r.net_amount for r in remaining_royalties)
-                        s_sum = sum(s.fee * 0.5 for s in remaining_syncs)
-                        work.total_earnings = r_sum + s_sum
-                        session.add(work)
-
-            session.commit()
-
-
-        return {
-            "status": "success",
-            "filename": filename,
-            "vector_chunks_deleted": chunks_deleted,
-            "relational_records_deleted": len(doc_chunks) + len(royalties),
-        }
-    except Exception as e:
-        logger.error(f"Failed to delete document {filename}: {e}")
-        raise HTTPException(status_code=500, detail=str(e))
-
-
 @app.post("/api/documents/bulk-delete")
 async def bulk_delete_documents(payload: dict[str, list[str]]):
     """Bulk delete multiple documents, their vector chunks, and relational records."""
@@ -868,6 +812,63 @@ async def bulk_delete_documents(payload: dict[str, list[str]]):
     except Exception as e:
         logger.error(f"Failed to bulk delete documents: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.delete("/api/documents/{filename:path}")
+async def delete_document(filename: str):
+    """Delete a document, its vector store chunks, and relational records."""
+    try:
+        with Session(engine) as session:
+            # Delete relational document chunks
+            doc_chunks = session.exec(select(DocumentChunk).where(DocumentChunk.source_filename == filename)).all()
+
+            for dc in doc_chunks:
+                session.delete(dc)
+
+            # Delete splits referencing this source document
+            splits = session.exec(select(Split).where(Split.source_document == filename)).all()
+            affected_work_ids = {s.work_id for s in splits if s.work_id}
+            for s in splits:
+                session.delete(s)
+
+            # Delete royalties referencing this source document
+            royalties = session.exec(select(RelRoyaltyEntry).where(RelRoyaltyEntry.source_document == filename)).all()
+            affected_work_ids.update({r.work_id for r in royalties if r.work_id})
+            for r in royalties:
+                session.delete(r)
+
+            # Recalculate earnings for affected works; remove orphan works
+            for wid in affected_work_ids:
+                work = session.exec(select(Work).where(Work.id == wid)).first()
+                if work:
+                    remaining_royalties = session.exec(select(RelRoyaltyEntry).where(RelRoyaltyEntry.work_id == wid)).all()
+                    remaining_splits = session.exec(select(Split).where(Split.work_id == wid)).all()
+                    remaining_syncs = session.exec(select(RelSyncLicense).where(RelSyncLicense.work_id == wid)).all()
+
+                    if not remaining_royalties and not remaining_splits and not remaining_syncs:
+                        # Work is completely empty — delete it so it doesn't linger on dashboard
+                        store = _get_vector_store()
+                        store.delete_by_work(work.title)
+                        session.delete(work)
+                    else:
+                        r_sum = sum(r.net_amount for r in remaining_royalties)
+                        s_sum = sum(s.fee * 0.5 for s in remaining_syncs)
+                        work.total_earnings = r_sum + s_sum
+                        session.add(work)
+
+            session.commit()
+
+
+        return {
+            "status": "success",
+            "filename": filename,
+            "vector_chunks_deleted": chunks_deleted,
+            "relational_records_deleted": len(doc_chunks) + len(royalties),
+        }
+    except Exception as e:
+        logger.error(f"Failed to delete document {filename}: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
 
 
 
