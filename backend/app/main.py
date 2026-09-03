@@ -818,6 +818,9 @@ async def bulk_delete_documents(payload: dict[str, list[str]]):
 async def delete_document(filename: str):
     """Delete a document, its vector store chunks, and relational records."""
     try:
+        store = _get_vector_store()
+        chunks_deleted = store.delete_by_filename(filename)
+
         with Session(engine) as session:
             # Delete relational document chunks
             doc_chunks = session.exec(select(DocumentChunk).where(DocumentChunk.source_filename == filename)).all()
@@ -847,7 +850,6 @@ async def delete_document(filename: str):
 
                     if not remaining_royalties and not remaining_splits and not remaining_syncs:
                         # Work is completely empty — delete it so it doesn't linger on dashboard
-                        store = _get_vector_store()
                         store.delete_by_work(work.title)
                         session.delete(work)
                     else:
@@ -858,7 +860,6 @@ async def delete_document(filename: str):
 
             session.commit()
 
-
         return {
             "status": "success",
             "filename": filename,
@@ -868,6 +869,7 @@ async def delete_document(filename: str):
     except Exception as e:
         logger.error(f"Failed to delete document {filename}: {e}")
         raise HTTPException(status_code=500, detail=str(e))
+
 
 
 
