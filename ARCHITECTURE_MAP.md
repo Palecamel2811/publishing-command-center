@@ -77,9 +77,9 @@ flowchart TD
 
 ### 2. ⚡ Backend API Layer (`Heroku`)
 * **FastAPI (Python 3.11):** High-performance asynchronous Python web framework.
-* **Uvicorn ASGI:** Production web server handling multi-threaded concurrency.
+* **Uvicorn ASGI Server:** Asynchronous request handling and SSE streaming; horizontal/process concurrency is configured at deployment.
 * **CORS Middleware:** Multi-origin security configuration allowing cross-domain communication between Vercel and Heroku.
-* **StreamingResponse (SSE Engine):** Native Server-Sent Events HTTP streamer delivering sub-200ms Time-to-First-Token.
+* **StreamingResponse (SSE Engine):** Low-latency token streaming via Server-Sent Events (SSE), with Time-to-First-Token monitored as an operational metric.
 
 ---
 
@@ -103,7 +103,7 @@ flowchart TD
 
 ### 5. 🤖 Cloud AI & LLM Engine (`Microsoft Azure`)
 * **Azure OpenAI Service:** Enterprise cloud hosting running **`gpt-4.1-mini`**.
-* **Deterministic Temperature Control (`temperature=0.0`):** 100% deterministic sampling eliminating hallucination variance.
+* **Low-Variance Generation (`temperature=0.0`):** `temperature=0.0` is used to improve consistency for factual, document-grounded responses; deterministic calculations remain in application code.
 * **System Guardrails:** Strict prompt constraints forcing the model to cite exact document sources.
 
 ---

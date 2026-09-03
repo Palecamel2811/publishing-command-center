@@ -532,24 +532,43 @@ class DocumentIngestionService:
                                 db_session.add(s)
                                 existing_splits.add(split["party_name"])
                     
-                    # Upsert royalty entries from extracted data
+                    # Upsert royalty entries from extracted data (with financial validation & deduplication)
                     for entry in royalty_data:
                         work_stmt = select(Work).where(Work.title == entry.get("work_title", ""))
                         work = db_session.exec(work_stmt).first()
                         if work:
-                            royalty = RelRoyaltyEntry(
-                                work_id=work.id,
-                                platform=entry.get("platform", "unknown"),
-                                royalty_type=entry.get("royalty_type", "other"),
-                                period_start=entry.get("period_start", ""),
-                                period_end=entry.get("period_end", ""),
-                                gross_amount=entry.get("gross_amount", 0.0),
-                                fees_deducted=entry.get("fees_deducted", 0.0),
-                                net_amount=entry.get("net_amount", 0.0),
-                                currency=entry.get("currency", "USD"),
-                                source_document=entry.get("source_document", file_name),
-                            )
-                            db_session.add(royalty)
+                            gross_val = entry.get("gross_amount", 0.0)
+                            fees_val = entry.get("fees_deducted", 0.0)
+                            net_val = entry.get("net_amount", 0.0)
+                            
+                            # Financial Rule: Gross MUST be >= Net
+                            if gross_val < net_val:
+                                gross_val = net_val + fees_val
+                            
+                            # Deduplication check: do not insert duplicate royalty entry for same work, platform, period, net_amount
+                            existing_royalty = db_session.exec(
+                                select(RelRoyaltyEntry).where(
+                                    RelRoyaltyEntry.work_id == work.id,
+                                    RelRoyaltyEntry.platform == entry.get("platform", "unknown"),
+                                    RelRoyaltyEntry.period_start == entry.get("period_start", ""),
+                                    RelRoyaltyEntry.net_amount == net_val,
+                                )
+                            ).first()
+                            
+                            if not existing_royalty:
+                                royalty = RelRoyaltyEntry(
+                                    work_id=work.id,
+                                    platform=entry.get("platform", "unknown"),
+                                    royalty_type=entry.get("royalty_type", "other"),
+                                    period_start=entry.get("period_start", ""),
+                                    period_end=entry.get("period_end", ""),
+                                    gross_amount=gross_val,
+                                    fees_deducted=fees_val,
+                                    net_amount=net_val,
+                                    currency=entry.get("currency", "USD"),
+                                    source_document=entry.get("source_document", file_name),
+                                )
+                                db_session.add(royalty)
                     
                     # Upsert sync licenses
                     for s_item in sync_data:

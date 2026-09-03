@@ -427,7 +427,10 @@ async def get_dashboard(period: Optional[str] = None, start_date: Optional[str] 
                             x.net_amount for x in royalties if (x.period_start or x.created_at.strftime("%Y-%m")) == (r.period_start or r.created_at.strftime("%Y-%m"))
                         )
                         for r in royalties
-                    }.items()
+                    }.items(),
+                    key=lambda item: (
+                        item[0].split()[1] + "-Q" + item[0].split()[0][1] if ("Q" in item[0] and len(item[0].split()) == 2) else item[0]
+                    )
                 )
             ] if royalties else [],
         }
