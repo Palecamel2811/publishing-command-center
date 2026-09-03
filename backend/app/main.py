@@ -215,19 +215,17 @@ async def lifespan(app: FastAPI):
     init_db()
     logger.info("Database tables initialized")
 
-    # Auto-populate sample dataset on cloud startup if database is empty
-    with Session(engine) as session:
-        first_work = session.exec(select(Work)).first()
-        if not first_work:
-            logger.info("Empty database detected on startup — auto-populating 88 sample documents...")
-            try:
-                import subprocess
-                subprocess.Popen(["python3", "scripts/populate_sample_data.py"])
-            except Exception as pop_err:
-                logger.warning(f"Auto-populate trigger failed: {pop_err}")
+    # Seed sample catalog dataset if database is empty
+    try:
+        from app.db.seed import seed_sample_catalog
+        with Session(engine) as session:
+            seed_sample_catalog(session)
+    except Exception as seed_err:
+        logger.warning(f"Catalog seeder encountered an error: {seed_err}")
     
     # Warm up BM25 index with existing documents
     _warmup_bm25_index()
+
     
     app.state.start_time = time.time()
     logger.info("All services initialized")
@@ -872,10 +870,22 @@ async def delete_document(filename: str):
         raise HTTPException(status_code=500, detail=str(e))
 
 
-
+@app.post("/api/catalog/seed")
+async def seed_catalog_endpoint(force: bool = False):
+    """Seed or re-seed sample catalog documents and works."""
+    from app.db.seed import seed_sample_catalog
+    with Session(engine) as session:
+        if force:
+            for model_cls in [DocumentChunk, RoyaltyEntry, Split, SyncLicense, Work]:
+                for item in session.exec(select(model_cls)).all():
+                    session.delete(item)
+            session.commit()
+        result = seed_sample_catalog(session)
+    return result
 
 
 @app.delete("/api/works/{work_id}")
+
 async def delete_work(work_id: str):
     """Delete a work and all associated splits, royalties, and sync licenses."""
     try:
