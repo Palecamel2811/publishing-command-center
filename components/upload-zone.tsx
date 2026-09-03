@@ -33,11 +33,13 @@ export function UploadZone({ onUploadComplete }: UploadZoneProps) {
   const [deletingFilename, setDeletingFilename] = useState<string | null>(null);
   const [previewFilename, setPreviewFilename] = useState<string | null>(null);
   const [uploadedDocs, setUploadedDocs] = useState<IngestedDocItem[]>([]);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const fetchHistory = useCallback(async () => {
+    setIsRefreshing(true);
     try {
-      const res = await getIngestionHistory(50);
+      const res = await getIngestionHistory(100);
       if (res?.history) {
         setUploadedDocs(res.history.map((item: any) => ({
           id: item.id,
@@ -50,8 +52,11 @@ export function UploadZone({ onUploadComplete }: UploadZoneProps) {
       }
     } catch (err) {
       console.error('Failed to load ingestion history', err);
+    } finally {
+      setTimeout(() => setIsRefreshing(false), 400);
     }
   }, []);
+
 
   useEffect(() => {
     fetchHistory();
@@ -133,7 +138,32 @@ export function UploadZone({ onUploadComplete }: UploadZoneProps) {
         return f;
       }));
 
-      fetchHistory();
+      // Instantly add successful files to staged uploadedDocs list
+      const todayStr = new Date().toISOString().split('T')[0];
+      const newlyUploadedItems: IngestedDocItem[] = filesToUpload.map((file, idx) => {
+        const itemRes = result?.results?.[idx]?.result || result?.result || {};
+        return {
+          id: `new-${Date.now()}-${idx}`,
+          filename: file.name.replace('.pdf.txt', '').replace('.txt', ''),
+          rawFilename: file.name,
+          chunks: itemRes.chunks_created || 1,
+          works: itemRes.work_title ? [itemRes.work_title] : [],
+          date: todayStr,
+        };
+      });
+
+      setUploadedDocs(prev => {
+        const existingNames = new Set(prev.map(d => d.rawFilename));
+        const filteredNew = newlyUploadedItems.filter(item => !existingNames.has(item.rawFilename));
+        return [...filteredNew, ...prev];
+      });
+
+      // Clear successful files from top queue so they transition smoothly down to staged list
+      setTimeout(() => {
+        setFiles(prev => prev.filter(f => f.status === 'error'));
+      }, 600);
+
+      await fetchHistory();
       onUploadComplete?.(result);
       
     } catch (error: any) {
@@ -144,6 +174,7 @@ export function UploadZone({ onUploadComplete }: UploadZoneProps) {
       setIsUploading(false);
     }
   };
+
 
 
   const removeFile = (index: number) => {
@@ -455,13 +486,15 @@ export function UploadZone({ onUploadComplete }: UploadZoneProps) {
 
               <button
                 onClick={fetchHistory}
-                className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors flex items-center gap-1 px-2 py-1.5 rounded hover:bg-white/5"
+                disabled={isRefreshing}
+                className="text-xs text-cyan-400 hover:text-cyan-300 transition-colors flex items-center gap-1 px-2 py-1.5 rounded hover:bg-white/5 disabled:opacity-50"
               >
-                <svg className="w-3.5 h-3.5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <svg className={`w-3.5 h-3.5 ${isRefreshing ? 'animate-spin' : ''}`} fill="none" viewBox="0 0 24 24" stroke="currentColor">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
                 </svg>
-                Refresh
+                {isRefreshing ? 'Refreshing...' : 'Refresh'}
               </button>
+
             </div>
           </div>
           

@@ -712,8 +712,8 @@ def _find_document_file(filename: str) -> Optional[Path]:
 
 
 @app.get("/api/ingest/history")
-async def get_ingestion_history(limit: int = 20):
-    """Get recent ingestion history for active files on disk."""
+async def get_ingestion_history(limit: int = 50):
+    """Get recent ingestion history for all catalog documents."""
     with Session(engine) as session:
         chunks_stmt = select(DocumentChunk).order_by(DocumentChunk.created_at.desc()).limit(limit * 20)
         chunks = session.exec(chunks_stmt).all()
@@ -722,18 +722,17 @@ async def get_ingestion_history(limit: int = 20):
         for c in chunks:
             if c.source_filename not in seen:
                 seen.add(c.source_filename)
-                # Verify file still exists on disk
-                if _find_document_file(c.source_filename):
-                    history.append({
-                        "id": c.doc_id,
-                        "filename": c.source_filename,
-                        "doc_type": c.doc_type,
-                        "work_title": c.work_title,
-                        "created_at": c.created_at.isoformat(),
-                    })
-                    if len(history) >= limit:
-                        break
+                history.append({
+                    "id": c.doc_id,
+                    "filename": c.source_filename,
+                    "doc_type": c.doc_type,
+                    "work_title": c.work_title,
+                    "created_at": c.created_at.isoformat(),
+                })
+                if len(history) >= limit:
+                    break
         return {"history": history, "count": len(history)}
+
 
 
 @app.get("/api/documents/view/{filename:path}")
