@@ -74,14 +74,7 @@ export function UploadZone({ onUploadComplete }: UploadZoneProps) {
     addFiles(droppedFiles);
   }, []);
 
-  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files && e.target.files.length > 0) {
-      const selectedFiles = Array.from(e.target.files);
-      addAndUploadFiles(selectedFiles);
-    }
-  };
-
-  const addAndUploadFiles = async (newFiles: File[]) => {
+  const addFiles = (newFiles: File[]) => {
     const uploadFilesList: UploadFile[] = newFiles.map(file => {
       const isTooLarge = file.size > 15 * 1024 * 1024;
       return {
@@ -90,53 +83,16 @@ export function UploadZone({ onUploadComplete }: UploadZoneProps) {
         error: isTooLarge ? 'File exceeds 15MB cloud limit' : undefined,
       };
     });
-    
     setFiles(prev => [...prev, ...uploadFilesList]);
+  };
 
-    const validFiles = uploadFilesList.filter(f => f.status === 'idle').map(f => f.file);
-    if (validFiles.length === 0) return;
-
-    setIsUploading(true);
-    try {
-      let result: any = null;
-      try {
-        result = await uploadFiles(validFiles, 'split_sheet');
-      } catch (batchErr) {
-        const singleResults = [];
-        for (const file of validFiles) {
-          const res = await uploadFile(file, 'split_sheet');
-          singleResults.push({ result: res?.result, chunks: res?.result?.chunks_created || 1 });
-        }
-        result = { results: singleResults };
-      }
-      
-      setFiles(prev => prev.map((f) => {
-        const fileIdx = validFiles.indexOf(f.file);
-        if (fileIdx !== -1 && result?.results?.[fileIdx]) {
-          const itemRes = result.results[fileIdx];
-          const hasError = itemRes.error || (itemRes.warnings && itemRes.warnings.length > 0 && (!itemRes.result || itemRes.chunks === 0));
-          const errorMsg = itemRes.error || itemRes.warnings?.[0] || itemRes.result?.warnings?.[0] || 'Could not parse document text';
-          return {
-            ...f,
-            status: hasError ? 'error' : 'success',
-            error: hasError ? errorMsg : undefined,
-          };
-        } else if (fileIdx !== -1) {
-          return { ...f, status: 'success' };
-        }
-        return f;
-      }));
-
-      fetchHistory();
-      onUploadComplete?.(result);
-    } catch (error: any) {
-      setFiles(prev => prev.map(f => 
-        validFiles.includes(f.file) ? { ...f, status: 'error', error: error.message || 'Upload failed' } : f
-      ));
-    } finally {
-      setIsUploading(false);
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      const selectedFiles = Array.from(e.target.files);
+      addFiles(selectedFiles);
     }
   };
+
 
   const handleUpload = async () => {
     if (files.length === 0 || isUploading) return;

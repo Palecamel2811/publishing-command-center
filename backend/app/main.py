@@ -757,19 +757,22 @@ async def view_document(filename: str, download: bool = False):
 async def delete_document(filename: str):
     """Delete a document, its vector store chunks, and relational records."""
     try:
-        # Delete from ChromaDB
-        store = _get_vector_store()
-        chunks_deleted = store.delete_by_filename(filename)
-
         with Session(engine) as session:
             # Delete relational document chunks
             doc_chunks = session.exec(select(DocumentChunk).where(DocumentChunk.source_filename == filename)).all()
+
             for dc in doc_chunks:
                 session.delete(dc)
 
+            # Delete splits referencing this source document
+            splits = session.exec(select(Split).where(Split.source_document == filename)).all()
+            affected_work_ids = {s.work_id for s in splits if s.work_id}
+            for s in splits:
+                session.delete(s)
+
             # Delete royalties referencing this source document
             royalties = session.exec(select(RelRoyaltyEntry).where(RelRoyaltyEntry.source_document == filename)).all()
-            affected_work_ids = {r.work_id for r in royalties}
+            affected_work_ids.update({r.work_id for r in royalties if r.work_id})
             for r in royalties:
                 session.delete(r)
 
@@ -777,12 +780,12 @@ async def delete_document(filename: str):
             for wid in affected_work_ids:
                 work = session.exec(select(Work).where(Work.id == wid)).first()
                 if work:
-                    remaining_royalties = work.royalties if work.royalties else []
-                    remaining_splits = work.splits if work.splits else []
-                    remaining_syncs = work.sync_licenses if work.sync_licenses else []
+                    remaining_royalties = session.exec(select(RelRoyaltyEntry).where(RelRoyaltyEntry.work_id == wid)).all()
+                    remaining_splits = session.exec(select(Split).where(Split.work_id == wid)).all()
+                    remaining_syncs = session.exec(select(RelSyncLicense).where(RelSyncLicense.work_id == wid)).all()
 
                     if not remaining_royalties and not remaining_splits and not remaining_syncs:
-                        # Work is completely empty — delete it so it doesn't linger on the dashboard
+                        # Work is completely empty — delete it so it doesn't linger on dashboard
                         store = _get_vector_store()
                         store.delete_by_work(work.title)
                         session.delete(work)
@@ -793,6 +796,7 @@ async def delete_document(filename: str):
                         session.add(work)
 
             session.commit()
+
 
         return {
             "status": "success",
