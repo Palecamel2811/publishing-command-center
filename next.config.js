@@ -22,6 +22,15 @@ const nextConfig = {
       },
     ];
   },
+  async rewrites() {
+    const backendUrl = process.env.NEXT_PUBLIC_API_URL || 'https://publishing-command-center-d6e1f2c72672.herokuapp.com';
+    return [
+      {
+        source: '/api/:path*',
+        destination: `${backendUrl.replace(/\/+$/, '')}/api/:path*`,
+      },
+    ];
+  },
   eslint: {
     ignoreDuringBuilds: true,
   },
@@ -29,5 +38,6 @@ const nextConfig = {
     ignoreBuildErrors: true,
   },
 };
+
 
 module.exports = nextConfig;
