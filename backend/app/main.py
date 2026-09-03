@@ -846,7 +846,7 @@ async def export_reports(report_type: str = "royalties"):
             works_map = {str(w.id): w.title for w in session.exec(select(Work)).all()}
             for s in syncs:
                 writer.writerow([works_map.get(str(s.work_id), "Unknown"), s.licensee, s.media_type, s.territory or "", f"{s.fee:.2f}", s.status, s.term_end or ""])
-        else:  # royalties default
+        elif report_type in ["royalties", "default"]:
             writer.writerow(["Work", "Platform", "Royalty Type", "Period Start", "Period End", "Gross Amount", "Fees Deducted", "Net Amount", "Source Document", "Date"])
             royalties = session.exec(select(RelRoyaltyEntry).order_by(RelRoyaltyEntry.created_at.desc())).all()
             works_map = {str(w.id): w.title for w in session.exec(select(Work)).all()}
@@ -863,6 +863,9 @@ async def export_reports(report_type: str = "royalties"):
                     r.source_document or "",
                     r.created_at.isoformat(),
                 ])
+        else:
+            raise HTTPException(status_code=400, detail=f"Invalid report_type '{report_type}'. Must be royalties, works, or sync.")
+
                 
     csv_content = output.getvalue()
     return Response(

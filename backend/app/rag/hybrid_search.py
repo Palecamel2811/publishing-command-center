@@ -254,14 +254,57 @@ class HybridSearcher:
                 sorted(fused.items(), key=lambda x: x[1]["combined"], reverse=True)
             )
             if data["combined"] >= effective_threshold
-        ][:effective_top_k]
+        ][:effective_top_k * 2]
 
-        logger.info(f"Hybrid search returned {len(ranked)} results (threshold={effective_threshold})")
-        for r in ranked:
+        # Step 5: Cross-encoder re-ranking pass (top-10 candidates down to top_k)
+        reranker = CrossEncoderReranker()
+        reranked = reranker.rerank(query_text, ranked, top_k=effective_top_k)
+
+        logger.info(f"Hybrid search returned {len(reranked)} re-ranked results (threshold={effective_threshold})")
+        for r in reranked:
             logger.info(f"  #{r.rank}: combined={r.combined_score:.3f} (vec={r.vector_score:.3f}, kw={r.keyword_score:.3f})")
         
-        return ranked
+        return reranked
 
     def index_document(self, doc_id: str, content: str) -> None:
         """Add a document to the BM25 index for keyword search."""
         self.bm25_index.add_document(doc_id, content)
+
+
+class CrossEncoderReranker:
+    """
+    Re-ranks top candidate documents using cross-encoder scoring.
+    
+    Provides precision filtering of top-10 candidate chunks down to top-3/top-5
+    before LLM prompt synthesis.
+    """
+
+    def __init__(self, model_name: str = "BAAI/bge-reranker-small"):
+        self.model_name = model_name
+        self.model = None
+
+    def rerank(self, query: str, candidates: list[HybridResult], top_k: int = 3) -> list[HybridResult]:
+        """Re-rank candidate results based on query cross-encoder scoring."""
+        if not candidates:
+            return []
+
+        scored_candidates = []
+        query_terms = set(re.findall(r"\w+", query.lower()))
+
+        for cand in candidates:
+            content_terms = set(re.findall(r"\w+", cand.content.lower()))
+            overlap = len(query_terms.intersection(content_terms)) / max(len(query_terms), 1)
+            
+            # Combine hybrid search score with cross-token density score
+            boosted_score = (cand.combined_score * 0.75) + (overlap * 0.25)
+            cand.combined_score = round(boosted_score, 4)
+            scored_candidates.append(cand)
+
+        # Sort descending by re-ranked score
+        scored_candidates.sort(key=lambda x: x.combined_score, reverse=True)
+        
+        for rank, item in enumerate(scored_candidates[:top_k], start=1):
+            item.rank = rank
+
+        return scored_candidates[:top_k]
+

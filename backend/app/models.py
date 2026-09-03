@@ -67,8 +67,11 @@ class QueryIntent(str, Enum):
     RIGHT_LOOKUP = "right_lookup"
     RECONCILIATION = "reconciliation"
     FORECAST = "forecast"
+    SPLIT_QUERY = "split_query"
+    CONTRACT_QUERY = "contract_query"
     ANALYSIS = "analysis"
     GENERAL = "general"
+
 
 
 # ── Core Domain Models ──────────────────────────────────────────────────────

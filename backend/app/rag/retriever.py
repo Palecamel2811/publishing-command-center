@@ -369,16 +369,8 @@ Keep answers concise but comprehensive for power users who understand the indust
                 f"[Source: {sr.document.metadata.get('source_filename', 'Unknown')}]"
                 f" ({sr.document.metadata.get('doc_type', 'document')}): {sr.document.content}"
             )
-            
-            sources.append({
-                "id": sr.document.id,
-                "filename": sr.document.metadata.get("source_filename", "Unknown"),
-                "doc_type": sr.document.metadata.get("doc_type", "unknown"),
-                "content": sr.document.content[:500],
-                "score": sr.score,
-                "rank": sr.rank,
-                "metadata": sr.document.metadata,
-            })
+            sources.append(self._build_source_item(sr))
+
         
         context = "\n\n".join(context_parts)
         
@@ -465,15 +457,8 @@ Keep answers concise but comprehensive for power users who understand the indust
                 f"[Source: {sr.document.metadata.get('source_filename', 'Unknown')}]"
                 f" ({sr.document.metadata.get('doc_type', 'document')}): {sr.document.content}"
             )
-            sources.append({
-                "id": sr.document.id,
-                "filename": sr.document.metadata.get("source_filename", "Unknown"),
-                "doc_type": sr.document.metadata.get("doc_type", "unknown"),
-                "content": sr.document.content[:500],
-                "score": sr.score,
-                "rank": sr.rank,
-                "metadata": sr.document.metadata,
-            })
+            sources.append(self._build_source_item(sr))
+
         
         context = "\n\n".join(context_parts)
         confidence = round(self._compute_confidence(results, query, understanding), 4)
@@ -585,6 +570,27 @@ Keep answers concise but comprehensive for power users who understand the indust
             f"Connect an LLM for AI-powered analysis and summaries."
         )
 
+    def _build_source_item(self, sr: SearchResult) -> dict[str, Any]:
+        """Build citation dictionary with precise line range offset metadata."""
+        content = sr.document.content or ""
+        line_count = len(content.splitlines()) if content else 1
+        line_start = sr.document.metadata.get("line_start", 1)
+        line_end = sr.document.metadata.get("line_end", line_start + line_count - 1)
+        line_offset = f"L{line_start}-L{line_end}" if line_start != line_end else f"L{line_start}"
+        
+        return {
+            "id": sr.document.id,
+            "filename": sr.document.metadata.get("source_filename", "Unknown"),
+            "doc_type": sr.document.metadata.get("doc_type", "unknown"),
+            "content": content[:500],
+            "score": sr.score,
+            "rank": sr.rank,
+            "line_offset": line_offset,
+            "line_start": line_start,
+            "line_end": line_end,
+            "metadata": sr.document.metadata,
+        }
+
     def _compute_confidence(
         self, results: list[SearchResult], query: str, understanding: QueryUnderstanding
     ) -> float:
@@ -599,11 +605,17 @@ Keep answers concise but comprehensive for power users who understand the indust
         if not results:
             return 0.0
         
+        # Adaptive confidence thresholding: penalize weak matches below threshold (0.45)
+        top_score = results[0].score if results else 0.0
+        if top_score < self.score_threshold:
+            return round(top_score * 0.5, 4)
+        
         avg_score = sum(r.score for r in results) / len(results)
         relevance_bonus = min(len(results) / 3.0, 1.0) * 0.2
         intent_bonus = understanding.confidence * 0.1
         
         return min(avg_score * 0.7 + relevance_bonus + intent_bonus, 1.0)
+
 
     def _suggest_followups(self, query: str, understanding: QueryUnderstanding) -> list[str]:
         """Generate follow-up question suggestions."""

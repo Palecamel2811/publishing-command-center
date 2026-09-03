@@ -59,3 +59,32 @@ def test_chunk_royalty_statement():
     content, meta = chunks[0]
     assert "Spotify" in meta.platform.capitalize()
     assert meta.period_start == "Q1 2024"
+
+
+def test_chunk_empty_document():
+    chunker = LegalFinancialChunker(chunk_size=512, chunk_overlap=64)
+    chunks = chunker.chunk_document(
+        text="",
+        doc_type="general",
+        source_filename="empty.txt",
+    )
+    # Empty documents produce either 0 chunks or 1 header-only chunk
+    assert len(chunks) <= 1
+
+
+def test_chunk_unstructured_large_text():
+    chunker = LegalFinancialChunker(chunk_size=100, chunk_overlap=20)
+    # Create multiple paragraphs to trigger chunking across paragraph boundaries
+    long_text = "\n\n".join(["Paragraph " + str(p) + " " + " ".join([f"word_{i}" for i in range(50)]) for p in range(5)])
+    chunks = chunker.chunk_document(
+        text=long_text,
+        doc_type="general",
+        source_filename="long_text.txt",
+    )
+    assert len(chunks) > 1
+    for content, meta in chunks:
+        assert isinstance(content, str)
+        assert meta.doc_type == "general"
+
+
+

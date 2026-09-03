@@ -19,6 +19,9 @@ import {
 import { formatCurrency, formatCompactNumber } from '@/types';
 import { runReconciliation } from '@/lib/api';
 import { CalendarRangePicker } from '@/components/calendar-range-picker';
+import { ErrorBoundary } from '@/components/ui/error-boundary';
+import { KPICardSkeleton, ChartCardSkeleton, Skeleton } from '@/components/ui/skeleton';
+
 
 interface DashboardProps {
   data?: any;
@@ -250,51 +253,54 @@ export function Dashboard({
         </div>
         <div className="panel-body pt-2">
           <div className="h-[250px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={trendData}>
-                <defs>
-                  <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3} />
-                    <stop offset="95%" stopColor="#06b6d4" stopOpacity={0} />
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
-                <XAxis
-                  dataKey="month"
-                  stroke="rgba(255,255,255,0.3)"
-                  tick={{ fontSize: 11 }}
-                  tickLine={false}
-                />
-                <YAxis
-                  stroke="rgba(255,255,255,0.3)"
-                  tick={{ fontSize: 11 }}
-                  tickLine={false}
-                  tickFormatter={(v: number) => `$${(v / 1000).toFixed(0)}K`}
-                  width={50}
-                />
-                <Tooltip
-                  cursor={{ stroke: 'rgba(6, 182, 212, 0.4)', strokeWidth: 1, strokeDasharray: '3 3' }}
-                  content={({ active, payload, label }) => {
-                    if (!active || !payload?.[0]) return null;
-                    const value = Number(payload[0].value);
-                    return (
-                      <div className="bg-[#0d1322] border border-cyan-500/40 p-3 rounded-xl shadow-2xl backdrop-blur-xl space-y-1">
-                        <div className="text-white font-semibold text-xs border-b border-white/10 pb-1">{label}</div>
-                        <div className="text-cyan-400 font-bold font-mono text-sm">{formatCurrency(value)}</div>
-                      </div>
-                    );
-                  }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="amount"
-                  stroke="#06b6d4"
-                  strokeWidth={2}
-                  fill="url(#colorRevenue)"
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+            <ErrorBoundary fallbackTitle="Revenue Trend Chart Error">
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={trendData}>
+                  <defs>
+                    <linearGradient id="colorRevenue" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#06b6d4" stopOpacity={0.3} />
+                      <stop offset="95%" stopColor="#06b6d4" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" />
+                  <XAxis
+                    dataKey="month"
+                    stroke="rgba(255,255,255,0.3)"
+                    tick={{ fontSize: 11 }}
+                    tickLine={false}
+                  />
+                  <YAxis
+                    stroke="rgba(255,255,255,0.3)"
+                    tick={{ fontSize: 11 }}
+                    tickLine={false}
+                    tickFormatter={(v: number) => `$${(v / 1000).toFixed(0)}K`}
+                    width={50}
+                  />
+                  <Tooltip
+                    cursor={{ stroke: 'rgba(6, 182, 212, 0.4)', strokeWidth: 1, strokeDasharray: '3 3' }}
+                    content={({ active, payload, label }) => {
+                      if (!active || !payload?.[0]) return null;
+                      const value = Number(payload[0].value);
+                      return (
+                        <div className="bg-[#0d1322] border border-cyan-500/40 p-3 rounded-xl shadow-2xl backdrop-blur-xl space-y-1">
+                          <div className="text-white font-semibold text-xs border-b border-white/10 pb-1">{label}</div>
+                          <div className="text-cyan-400 font-bold font-mono text-sm">{formatCurrency(value)}</div>
+                        </div>
+                      );
+                    }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="amount"
+                    stroke="#06b6d4"
+                    strokeWidth={2}
+                    fill="url(#colorRevenue)"
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            </ErrorBoundary>
           </div>
+
         </div>
       </div>
 
@@ -614,30 +620,22 @@ function DashboardSkeleton() {
     <div className="space-y-4 max-w-[1600px] mx-auto">
       <div className="flex items-center justify-between">
         <div className="space-y-2">
-          <div className="h-6 w-40 bg-white/10 rounded shimmer" />
-          <div className="h-4 w-60 bg-white/5 rounded shimmer" />
+          <Skeleton className="h-6 w-44" />
+          <Skeleton className="h-4 w-60" />
         </div>
       </div>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="panel-card p-4">
-            <div className="h-3 w-20 bg-white/10 rounded mb-3 shimmer" />
-            <div className="h-7 w-28 bg-white/10 rounded shimmer" />
-          </div>
+          <KPICardSkeleton key={i} />
         ))}
       </div>
-      <div className="panel-card p-4 h-[350px]">
-        <div className="h-5 w-32 bg-white/10 rounded mb-4 shimmer" />
-        <div className="h-[280px] w-full bg-white/5 rounded shimmer" />
-      </div>
+      <ChartCardSkeleton height="h-[300px]" />
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-3">
         {[1, 2, 3].map((i) => (
-          <div key={i} className="panel-card p-4 h-[280px]">
-            <div className="h-5 w-24 bg-white/10 rounded mb-4 shimmer" />
-            <div className="h-[200px] w-full bg-white/5 rounded shimmer" />
-          </div>
+          <ChartCardSkeleton key={i} height="h-[220px]" />
         ))}
       </div>
     </div>
   );
 }
+

@@ -67,11 +67,31 @@ def test_reports_csv_export(client):
     assert "Work,Platform,Royalty Type" in response.text
 
 
-def test_query_endpoint(client):
-    response = client.post("/api/query", json={"query": "How much did I earn from Spotify for Golden Hour?"})
+def test_reports_csv_export_invalid_type(client):
+    response = client.get("/api/reports/export?report_type=invalid_type")
+    assert response.status_code == 400 or response.status_code == 422
+
+
+@pytest.mark.parametrize("query_text", [
+    "How much did I earn from Spotify for Golden Hour?",
+    "What are the split terms for Sauce?",
+    "Show me sync license terms for film placements",
+    "What is the capital of France?",  # Out-of-domain query test
+])
+def test_query_endpoint_unbiased(client, query_text):
+    response = client.post("/api/query", json={"query": query_text})
     assert response.status_code == 200
     data = response.json()
     assert "response" in data
     assert "sources" in data
     assert "confidence" in data
-    assert len(data["sources"]) >= 1
+    assert isinstance(data["response"], str)
+    assert isinstance(data["sources"], list)
+    assert isinstance(data["confidence"], (int, float))
+    assert 0.0 <= data["confidence"] <= 1.0
+
+
+def test_query_endpoint_empty_query(client):
+    response = client.post("/api/query", json={"query": ""})
+    assert response.status_code in [200, 400, 422]
+

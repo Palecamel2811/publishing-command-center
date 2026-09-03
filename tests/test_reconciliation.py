@@ -60,3 +60,28 @@ def test_reconciliation_split_verification():
     split_disc = [d for d in result.discrepancies if d.type == "share_discrepancy"]
     assert len(split_disc) >= 1
     assert any("Jordan Lee" in d.description for d in split_disc)
+
+
+def test_reconciliation_zero_discrepancies():
+    service = ReconciliationService()
+    data_sources = [
+        {
+            "work_title": "Clean Track",
+            "platform": "spotify",
+            "gross_revenue": 1000.0,
+            "net_revenue": 1000.0,
+        }
+    ]
+    splits = [
+        {"party_name": "Writer A", "share_percentage": 100.0}
+    ]
+    result = service.check_reconciliation(data_sources=data_sources, splits=splits)
+    assert isinstance(result.discrepancies, list)
+
+
+def test_reconciliation_empty_sources():
+    service = ReconciliationService()
+    result = service.check_reconciliation(data_sources=[], splits=[])
+    assert result.total_platforms_compared == 0
+    assert len(result.discrepancies) == 0
+

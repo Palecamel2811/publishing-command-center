@@ -29,6 +29,9 @@ class ChunkMetadata:
     royalty_type: str | None = None
     clause_type: str | None = None
     table_header: str | None = None
+    line_start: int = 1
+    line_end: int = 1
+
 
 
 class LegalFinancialChunker:

@@ -737,17 +737,34 @@ class DocumentIngestionService:
             # Fallback: try as text
             return file_data.decode("utf-8", errors="replace"), {}
 
-    async def _parse_pdf(
-        self, file_data: bytes, doc_type: str
-    ) -> tuple[str, dict]:
-        """Parse PDF files."""
+    async def _parse_pdf(self, file_data: bytes, doc_type: str) -> tuple[str, dict]:
+        """Parse PDF files with pdfplumber tabular extraction fallback."""
+        pages = []
+        try:
+            import pdfplumber
+            from io import BytesIO
+            with pdfplumber.open(BytesIO(file_data)) as pdf:
+                for p in pdf.pages:
+                    tables = p.extract_tables()
+                    if tables:
+                        for table in tables:
+                            for row in table:
+                                cleaned_row = [str(cell).strip() if cell else "" for cell in row]
+                                if any(cleaned_row):
+                                    pages.append(" | ".join(cleaned_row))
+                    text = p.extract_text()
+                    if text and text.strip():
+                        pages.append(text.strip())
+                if pages:
+                    return "\n\n".join(pages), {"pages": len(pdf.pages)}
+        except Exception as e:
+            logger.info(f"pdfplumber fallback to pypdf: {e}")
+
         try:
             from pypdf import PdfReader
             from io import BytesIO
             
             reader = PdfReader(BytesIO(file_data))
-            pages = []
-            
             for page in reader.pages:
                 text = page.extract_text() or ""
                 if text.strip():
@@ -760,6 +777,7 @@ class DocumentIngestionService:
             raise RuntimeError(
                 "pypdf not installed. Run: pip install pypdf"
             )
+
 
     async def _parse_csv(self, file_data: bytes, doc_type: str) -> tuple[str, dict]:
         """Parse CSV files into a readable text format."""
