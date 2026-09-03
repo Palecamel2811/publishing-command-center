@@ -2,7 +2,8 @@
 
 import { useState, useCallback, useRef, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { uploadFiles, getIngestionHistory, deleteDocument } from '@/lib/api';
+import { uploadFiles, uploadFile, getIngestionHistory, deleteDocument } from '@/lib/api';
+
 import { DocumentViewerModal } from '@/components/document-viewer-modal';
 
 interface UploadZoneProps {
@@ -163,14 +164,14 @@ export function UploadZone({ onUploadComplete }: UploadZoneProps) {
       }
       
       setFiles(prev => prev.map((f, idx) => {
-        if (f.status === 'idle') {
-          const batchResult = result.results?.[idx];
-          const chunks = batchResult?.chunks ?? batchResult?.result?.chunks_created ?? 1;
-          const hasError = !batchResult;
+        if (f.status === 'idle' || f.status === 'uploading') {
+          const batchResult = result?.results?.[idx] || result?.result || result;
+          const hasError = !batchResult || batchResult.error || (batchResult.warnings && batchResult.warnings.length > 0 && (!batchResult.result && !batchResult.chunks_created));
+          const errorMsg = batchResult?.error || batchResult?.warnings?.[0] || 'Upload processing error';
           return {
             ...f,
             status: hasError ? 'error' : 'success',
-            error: hasError ? (batchResult?.warnings?.[0] || 'Upload error') : undefined,
+            error: hasError ? errorMsg : undefined,
           };
         }
         return f;
@@ -181,12 +182,13 @@ export function UploadZone({ onUploadComplete }: UploadZoneProps) {
       
     } catch (error: any) {
       setFiles(prev => prev.map(f => 
-        f.status === 'idle' ? { ...f, status: 'error', error: error.message || 'Upload failed' } : f
+        (f.status === 'idle' || f.status === 'uploading') ? { ...f, status: 'error', error: error.message || 'Upload failed' } : f
       ));
     } finally {
       setIsUploading(false);
     }
   };
+
 
   const removeFile = (index: number) => {
     setFiles(prev => prev.filter((_, i) => i !== index));
