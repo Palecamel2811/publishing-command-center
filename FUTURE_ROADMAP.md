@@ -19,9 +19,20 @@ These upgrades refine precision, data validation, and UI resilience without brea
 - **Scanned PDF OCR Pipeline**: Tesseract OCR fallback for physical split sheet scans or signed agreements that lack digital text layers.
 - **Direct Excel (`.xlsx`) Import**: Column mapping for multi-tab distributor royalty reports (e.g., Kobalt, Sony Music Publishing, ASCAP/BMI statements).
 
-### 3. Frontend Error Boundaries & Skeletal States
+### 3. Frontend Error Boundaries, Telemetry & Skeletal States
+- **Real-Time Backend Connection & Latency Indicator**: Live status pill in top navigation header displaying real-time cloud backend connectivity (e.g. `🟢 Heroku Connected (32ms)` vs `🔴 Reconnecting`), server uptime, and active vector store status.
+- **Global Toast Notification System**: Interactive toast alerts displaying progress, success, and detailed error messages for background uploads, bulk deletes, and audit reports.
 - **React Error Boundaries**: Component-level error catch blocks around chart rendering and chat streaming to prevent full-page crashes.
 - **Skeletal Loading Animations**: Custom shimmer loading skeletons for dashboard cards and table rows while async data resolves.
+
+### 4. Developer / Admin Diagnostics & Settings Panel
+- **Dedicated Developer Console Tab**: Separate technical RAG diagnostics (raw vector chunk inspection, ChromaDB collection metrics, embedding dimensional inspection) into an isolated Developer/Admin Settings panel, keeping the primary Assets & Documents catalog strictly user-facing.
+- **One-Click Re-Seeding & Vector Reset**: UI button in Developer Settings to trigger deterministic catalog resets (`POST /api/catalog/seed?force=true`) or clear vector store collections safely.
+
+### 5. Automated CI/CD Parity & Environment Sync Scripts
+- **Automated Multi-Cloud Environment Sync (`scripts/sync_cloud_env.sh`)**: CLI automation script syncing environment variables and secrets seamlessly across GitHub, Vercel Production (`NEXT_PUBLIC_API_URL`), and Heroku Config Vars to prevent configuration drift.
+- **Automated Deployment Verification Action**: GitHub Actions workflow that automatically executes smoke tests against the live Vercel frontend and Heroku backend upon PR merges.
+
 
 ---
 
